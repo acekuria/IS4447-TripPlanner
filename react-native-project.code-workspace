@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "IS4447-habit-tracker",
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": "explicit",
+			"source.organizeImports": "explicit",
+			"source.sortMembers": "explicit"
+		}
+	}
+}
+
