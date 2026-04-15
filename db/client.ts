@@ -1,15 +1,23 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 
-export const sqlite = openDatabaseSync('students.db');
+export const sqlite = openDatabaseSync('habits.db');
 
 sqlite.execSync(`
-  CREATE TABLE IF NOT EXISTS students (
+  PRAGMA foreign_keys = ON;
+
+  CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
+  );
+
+  CREATE TABLE IF NOT EXISTS habits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    major TEXT NOT NULL,
-    year TEXT NOT NULL,
-    count INTEGER NOT NULL DEFAULT 0
+    category_id INTEGER NOT NULL,
+    frequency TEXT NOT NULL CHECK (frequency IN ('daily', 'weekly')),
+    count INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (category_id) REFERENCES categories(id)
   );
 `);
 

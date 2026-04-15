@@ -1,37 +1,34 @@
-import { Student } from '@/app/_layout';
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Habit } from '@/app/_layout';
 
 type Props = {
-  student: Student;
+  habit: Habit;
 };
 
-export default function StudentCard({ student }: Props) {
+export default function HabitCard({ habit }: Props) {
   const router = useRouter();
-  const studentSummary = `${student.name}, ${student.major}, Year${student.year}`;
+  const habitSummary = `${habit.name}, ${habit.categoryName}, ${habit.frequency}`;
+
   const openDetails = () =>
-    router.push({ pathname: '/student/[id]', params: { id: student.id.toString() } });
+    router.push({ pathname: '/student/[id]', params: { id: habit.id.toString() } });
 
   return (
-    <Pressable 
-    onPress={openDetails}
-    accessibilityLabel={`${studentSummary}, view details`}
-    accessibilityRole="button"
-    style={({ pressed }) => [
-      styles.card,
-      pressed ? styles.cardPressed : null,
-      ]}
-
+    <Pressable
+      onPress={openDetails}
+      accessibilityLabel={`${habitSummary}, view details`}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.card, pressed ? styles.cardPressed : null]}
     >
-    <View style={styles.card}>
-        <Text style={styles.name}>{student.name}</Text>
-    </View>
+      <View>
+        <Text style={styles.name}>{habit.name}</Text>
+      </View>
 
       <View style={styles.tags}>
-        <InfoTag label="Major" value={student.major} />
-        <InfoTag label="Year" value={student.year} />
+        <InfoTag label="Category" value={habit.categoryName} />
+        <InfoTag label="Frequency" value={habit.frequency} />
       </View>
     </Pressable>
   );

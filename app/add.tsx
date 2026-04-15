@@ -2,54 +2,111 @@ import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { db } from '@/db/client';
-import { students as studentsTable } from '@/db/schema';
+import { getCategories, getHabits } from '@/db/queries';
+import { habits as habitsTable } from '@/db/schema';
 import { useRouter } from 'expo-router';
-import { useContext, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StudentContext } from './_layout';
+import { Category, HabitContext } from './_layout';
 
+const frequencyOptions = ['daily', 'weekly'] as const;
 
-export default function AddStudent() {
-const router = useRouter();
-const context = useContext(StudentContext);
-const [name, setName] = useState('');
-const [major, setMajor] = useState('');
-const [year, setYear] = useState('');
-if (!context) return null;
-const { setStudents } = context;
-const saveStudent = async () => {
-await db.insert(studentsTable).values({
-name,
-major,
-year,
-count: 0,
-});
-const rows = await db.select().from(studentsTable);
-setStudents(rows);
-router.back();
-};
-return (
-<SafeAreaView style={styles.safeArea}>
-<ScrollView contentContainerStyle={styles.content}>
-<ScreenHeader title="Add Student" subtitle="Create a new student
-profile." />
-<View style={styles.form}>
-<FormField label="Name" value={name} onChangeText={setName} />
-<FormField label="Major" value={major} onChangeText={setMajor} />
-<FormField label="Year" value={year} onChangeText={setYear} />
-</View>
-<PrimaryButton label="Save Student" onPress={saveStudent} />
-<View style={styles.backButton}>
-<PrimaryButton
-label="Cancel"
-variant="secondary"
-onPress={() => router.back()}
-/>
-</View>
-</ScrollView>
-</SafeAreaView>
-);
+export default function AddHabit() {
+  const router = useRouter();
+  const context = useContext(HabitContext);
+  const [name, setName] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      const rows = await getCategories();
+      setCategories(rows);
+      if (rows.length > 0) {
+        setSelectedCategoryId(rows[0].id);
+      }
+    };
+
+    void loadCategories();
+  }, []);
+
+  if (!context) return null;
+
+  const { setHabits } = context;
+
+  const saveHabit = async () => {
+    if (!name.trim() || selectedCategoryId === null) {
+      return;
+    }
+
+    await db.insert(habitsTable).values({
+      name: name.trim(),
+      categoryId: selectedCategoryId,
+      frequency,
+      count: 0,
+    });
+
+    const rows = await getHabits();
+    setHabits(rows);
+    router.back();
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <ScreenHeader title="Add Habit" subtitle="Create a new habit to track." />
+        <View style={styles.form}>
+          <FormField label="Habit Name" value={name} onChangeText={setName} />
+
+          <Text style={styles.label}>Category</Text>
+          <View style={styles.optionRow}>
+            {categories.map((category) => {
+              const isSelected = selectedCategoryId === category.id;
+              return (
+                <Pressable
+                  key={category.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select category ${category.name}`}
+                  onPress={() => setSelectedCategoryId(category.id)}
+                  style={[styles.optionButton, isSelected && styles.optionButtonSelected]}
+                >
+                  <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                    {category.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.label}>Frequency</Text>
+          <View style={styles.optionRow}>
+            {frequencyOptions.map((option) => {
+              const isSelected = frequency === option;
+              return (
+                <Pressable
+                  key={option}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select frequency ${option}`}
+                  onPress={() => setFrequency(option)}
+                  style={[styles.optionButton, isSelected && styles.optionButtonSelected]}
+                >
+                  <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                    {option}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+        <PrimaryButton label="Save Habit" onPress={saveHabit} />
+        <View style={styles.backButton}>
+          <PrimaryButton label="Cancel" variant="secondary" onPress={() => router.back()} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -61,10 +118,41 @@ const styles = StyleSheet.create({
   form: {
     marginBottom: 6,
   },
+  label: {
+    color: '#334155',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  optionButton: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  optionButtonSelected: {
+    backgroundColor: '#0F172A',
+    borderColor: '#0F172A',
+  },
+  optionButtonText: {
+    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  optionButtonTextSelected: {
+    color: '#FFFFFF',
+  },
   backButton: {
     marginTop: 10,
   },
-  content: {
-    
-  }
+  content: {},
 });

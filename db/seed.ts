@@ -1,17 +1,30 @@
 import { db } from './client';
-import { students } from './schema';
+import { categories, habits } from './schema';
 
-export async function seedStudentsIfEmpty() {
-  const existing = await db.select().from(students);
+const defaultCategories = [
+  { id: 1, name: 'Health' },
+  { id: 2, name: 'Learning' },
+  { id: 3, name: 'Productivity' },
+];
 
-  if (existing.length > 0) {
+const defaultHabits = [
+  { name: 'Drink Water', categoryId: 1, frequency: 'daily' as const, count: 0 },
+  { name: 'Read for 20 Minutes', categoryId: 2, frequency: 'daily' as const, count: 0 },
+  { name: 'Plan the Week', categoryId: 3, frequency: 'weekly' as const, count: 0 },
+];
+
+export async function seedHabitsIfEmpty() {
+  const existingCategories = await db.select().from(categories);
+
+  if (existingCategories.length === 0) {
+    await db.insert(categories).values(defaultCategories);
+  }
+
+  const existingHabits = await db.select().from(habits);
+
+  if (existingHabits.length > 0) {
     return;
   }
 
-  await db.insert(students).values([
-    { name: 'Emilia', major: 'Computer Science', year: '3', count: 0 },
-    { name: 'Jackie', major: 'Business', year: '2', count: 0 },
-    { name: 'Sammy', major: 'Engineering', year: '4', count: 0 },
-  ]);
+  await db.insert(habits).values(defaultHabits);
 }
-

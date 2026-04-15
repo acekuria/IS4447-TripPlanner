@@ -1,41 +1,38 @@
 import { Stack } from 'expo-router';
 import { createContext, useEffect, useState } from 'react';
-import { db } from '@/db/client';
-import { students as studentsTable } from '@/db/schema';
-import { seedStudentsIfEmpty } from '@/db/seed';
+import { seedHabitsIfEmpty } from '@/db/seed';
+import { getHabits, HabitRecord } from '@/db/queries';
 
-export type Student = {
+export type Habit = HabitRecord;
+
+export type Category = {
   id: number;
   name: string;
-  major: string;
-  year: string;
-  count: number;
 };
 
-type StudentContextType = {
-  students: Student[];
-  setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
+type HabitContextType = {
+  habits: Habit[];
+  setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
 };
 
-export const StudentContext =
-  createContext<StudentContextType | null>(null);
+export const HabitContext = createContext<HabitContextType | null>(null);
 
 export default function RootLayout() {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
-    const loadStudents = async () => {
-      await seedStudentsIfEmpty();
-      const rows = await db.select().from(studentsTable);
-      setStudents(rows);
+    const loadHabits = async () => {
+      await seedHabitsIfEmpty();
+      const rows = await getHabits();
+      setHabits(rows);
     };
 
-    void loadStudents();
+    void loadHabits();
   }, []);
 
   return (
-    <StudentContext.Provider value={{ students, setStudents }}>
+    <HabitContext.Provider value={{ habits, setHabits }}>
       <Stack />
-    </StudentContext.Provider>
+    </HabitContext.Provider>
   );
 }

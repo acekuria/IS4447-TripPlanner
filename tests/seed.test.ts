@@ -1,5 +1,5 @@
 import { db } from '../db/client';
-import { seedStudentsIfEmpty } from '../db/seed';
+import { seedHabitsIfEmpty } from '../db/seed';
 
 jest.mock('../db/client', () => ({
   db: {
@@ -10,36 +10,45 @@ jest.mock('../db/client', () => ({
 
 const mockDb = db as unknown as { select: jest.Mock; insert: jest.Mock };
 
-describe('seedStudentsIfEmpty', () => {
+describe('seedHabitsIfEmpty', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('inserts students when the table is empty', async () => {
-    const mockValues = jest.fn().mockResolvedValue(undefined);
-    const mockFrom = jest.fn().mockResolvedValue([]);
+  it('inserts categories and habits when the tables are empty', async () => {
+    const mockCategoryInsert = jest.fn().mockResolvedValue(undefined);
+    const mockHabitInsert = jest.fn().mockResolvedValue(undefined);
+    const mockFrom = jest
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
     mockDb.select.mockReturnValue({ from: mockFrom });
-    mockDb.insert.mockReturnValue({ values: mockValues });
+    mockDb.insert
+      .mockReturnValueOnce({ values: mockCategoryInsert })
+      .mockReturnValueOnce({ values: mockHabitInsert });
 
-    await seedStudentsIfEmpty();
+    await seedHabitsIfEmpty();
 
-    expect(mockDb.insert).toHaveBeenCalled();
-    expect(mockValues).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Emilia' }),
-        expect.objectContaining({ name: 'Jackie' }),
-        expect.objectContaining({ name: 'Sammy' }),
-      ])
+    expect(mockCategoryInsert).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ name: 'Health' })])
+    );
+    expect(mockHabitInsert).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ name: 'Drink Water' })])
     );
   });
 
-  it('does nothing when students already exist', async () => {
-    const mockFrom = jest.fn().mockResolvedValue([
-      { id: 1, name: 'Existing', major: 'CS', year: '1', count: 0 },
-    ]);
+  it('does not insert habits when habits already exist', async () => {
+    const mockFrom = jest
+      .fn()
+      .mockResolvedValueOnce([{ id: 1, name: 'Health' }])
+      .mockResolvedValueOnce([
+        { id: 1, name: 'Drink Water', categoryId: 1, frequency: 'daily', count: 0 },
+      ]);
+
     mockDb.select.mockReturnValue({ from: mockFrom });
 
-    await seedStudentsIfEmpty();
+    await seedHabitsIfEmpty();
 
     expect(mockDb.insert).not.toHaveBeenCalled();
   });

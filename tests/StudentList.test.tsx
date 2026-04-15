@@ -1,43 +1,43 @@
-import { render, waitFor } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import IndexScreen from '../app/(tabs)/index';
-import { StudentContext } from '../app/_layout';
+import { HabitContext } from '../app/_layout';
 
 jest.mock('@/db/client', () => ({
-    db: {
-        select: jest.fn(),
-        insert: jest.fn(),
-    },
+  sqlite: {},
+}));
+
+jest.mock('expo-drizzle-studio-plugin', () => ({
+  useDrizzleStudio: jest.fn(),
 }));
 
 jest.mock('expo-router', () => ({
-    useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
 }));
 
 jest.mock('react-native-safe-area-context', () => {
-    const { View } = require('react-native');
-    return { SafeAreaView: View };
+  const { View } = require('react-native');
+  return { SafeAreaView: View };
 });
 
-const mockStudent = {
-    id: 1,
-    name: 'Test Student',
-    major: 'Computer Science',
-    year: '3',
-    count: 0,
+const mockHabit = {
+  id: 1,
+  name: 'Drink Water',
+  categoryId: 1,
+  categoryName: 'Health',
+  frequency: 'daily',
+  count: 0,
 };
 
 describe('IndexScreen', () => {
-    it('renders the student and the add button', async () => {
-        const { getByText } = render(
-            <StudentContext.Provider value={{ students: [mockStudent], setStudents: jest.fn() }}>
-                <IndexScreen />
-            </StudentContext.Provider>
-        );
+  it('renders the habit and the add button', () => {
+    const { getByText, getAllByText } = render(
+      <HabitContext.Provider value={{ habits: [mockHabit], setHabits: jest.fn() }}>
+        <IndexScreen />
+      </HabitContext.Provider>
+    );
 
-        await waitFor(() => {
-            expect(getByText('Test Student')).toBeTruthy();
-            expect(getByText('Add Student')).toBeTruthy();
-        });
-
-    });
+    expect(getByText('Drink Water')).toBeTruthy();
+    expect(getByText('Add Habit')).toBeTruthy();
+    expect(getAllByText('Health').length).toBeGreaterThan(0);
+  });
 });

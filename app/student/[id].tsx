@@ -1,46 +1,42 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useContext } from 'react';
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { db } from '@/db/client';
+import { getHabits } from '@/db/queries';
+import { habits as habitsTable } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useContext } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db/client';
-import { students as studentsTable } from '@/db/schema';
-import { Student, StudentContext } from '../_layout';
+import { Habit, HabitContext } from '../_layout';
 
-export default function StudentDetail() {
+export default function HabitDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const context = useContext(StudentContext);
+  const context = useContext(HabitContext);
 
   if (!context) return null;
 
-  const { students, setStudents } = context;
+  const { habits, setHabits } = context;
+  const habit = habits.find((item: Habit) => item.id === Number(id));
 
-  const student = students.find(
-    (s: Student) => s.id === Number(id)
-  );
+  if (!habit) return null;
 
-  if (!student) return null;
+  const deleteHabit = async () => {
+    await db.delete(habitsTable).where(eq(habitsTable.id, Number(id)));
 
-  const deleteStudent = async () => {
-    await db
-      .delete(studentsTable)
-      .where(eq(studentsTable.id, Number(id)));
-
-    const rows = await db.select().from(studentsTable);
-    setStudents(rows);
+    const rows = await getHabits();
+    setHabits(rows);
     router.back();
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScreenHeader title={student.name} subtitle="Student details" />
+      <ScreenHeader title={habit.name} subtitle="Habit details" />
       <View style={styles.tags}>
-        <InfoTag label="Major" value={student.major} />
-        <InfoTag label="Year" value={student.year} />
+        <InfoTag label="Category" value={habit.categoryName} />
+        <InfoTag label="Frequency" value={habit.frequency} />
       </View>
 
       <PrimaryButton
@@ -48,13 +44,13 @@ export default function StudentDetail() {
         onPress={() =>
           router.push({
             pathname: '../student/[id]/edit',
-            params: { id }
+            params: { id },
           })
         }
       />
 
       <View style={styles.buttonSpacing}>
-        <PrimaryButton label="Delete" variant="secondary" onPress={deleteStudent} />
+        <PrimaryButton label="Delete" variant="secondary" onPress={deleteHabit} />
       </View>
     </SafeAreaView>
   );
