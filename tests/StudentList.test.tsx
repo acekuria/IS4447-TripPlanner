@@ -27,6 +27,8 @@ const mockHabit = {
   categoryColor: '#22C55E',
   frequency: 'daily',
   count: 0,
+  completedToday: false,
+  currentStreak: 3,
 };
 
 describe('IndexScreen', () => {
@@ -39,6 +41,8 @@ describe('IndexScreen', () => {
 
     expect(getByText('Drink Water')).toBeTruthy();
     expect(getByText('Add Habit')).toBeTruthy();
+    expect(getByText('Mark as done today')).toBeTruthy();
+    expect(getByText('3')).toBeTruthy();
     expect(getAllByText('Health').length).toBeGreaterThan(0);
   });
 });

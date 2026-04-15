@@ -20,6 +20,18 @@ sqlite.execSync(`
     count INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES categories(id)
   );
+
+  CREATE TABLE IF NOT EXISTS habit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    habit_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    value INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE,
+    UNIQUE (habit_id, date)
+  );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS habit_logs_habit_date_idx
+  ON habit_logs (habit_id, date);
 `);
 
 const categoryColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(categories);');

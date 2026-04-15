@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey(),
@@ -15,3 +15,18 @@ export const habits = sqliteTable('habits', {
   frequency: text('frequency').notNull(),
   count: integer('count').notNull().default(0),
 });
+
+export const habitLogs = sqliteTable(
+  'habit_logs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    habitId: integer('habit_id')
+      .notNull()
+      .references(() => habits.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    value: integer('value').notNull().default(1),
+  },
+  (table) => ({
+    habitDateUnique: uniqueIndex('habit_logs_habit_date_idx').on(table.habitId, table.date),
+  })
+);
