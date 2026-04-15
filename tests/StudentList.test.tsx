@@ -24,6 +24,7 @@ const mockHabit = {
   name: 'Drink Water',
   categoryId: 1,
   categoryName: 'Health',
+  categoryColor: '#22C55E',
   frequency: 'daily',
   count: 0,
 };

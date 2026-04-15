@@ -70,8 +70,13 @@ export default function AddHabit() {
                   accessibilityRole="button"
                   accessibilityLabel={`Select category ${category.name}`}
                   onPress={() => setSelectedCategoryId(category.id)}
-                  style={[styles.optionButton, isSelected && styles.optionButtonSelected]}
+                  style={[
+                    styles.optionButton,
+                    { borderColor: category.color },
+                    isSelected && [styles.categoryOptionSelected, { backgroundColor: category.color }],
+                  ]}
                 >
+                  <View style={[styles.colorSwatch, { backgroundColor: category.color }]} />
                   <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
                     {category.name}
                   </Text>
@@ -90,7 +95,7 @@ export default function AddHabit() {
                   accessibilityRole="button"
                   accessibilityLabel={`Select frequency ${option}`}
                   onPress={() => setFrequency(option)}
-                  style={[styles.optionButton, isSelected && styles.optionButtonSelected]}
+                  style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
                 >
                   <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
                     {option}
@@ -132,14 +137,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   optionButton: {
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderColor: '#CBD5E1',
     borderRadius: 10,
     borderWidth: 1,
+    flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  optionButtonSelected: {
+  categoryOptionSelected: {
+    borderColor: 'transparent',
+  },
+  frequencyOptionSelected: {
     backgroundColor: '#0F172A',
     borderColor: '#0F172A',
   },
@@ -150,6 +159,12 @@ const styles = StyleSheet.create({
   },
   optionButtonTextSelected: {
     color: '#FFFFFF',
+  },
+  colorSwatch: {
+    borderRadius: 999,
+    height: 10,
+    marginRight: 8,
+    width: 10,
   },
   backButton: {
     marginTop: 10,

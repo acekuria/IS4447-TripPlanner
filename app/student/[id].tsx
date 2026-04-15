@@ -35,7 +35,7 @@ export default function HabitDetail() {
     <SafeAreaView style={styles.safeArea}>
       <ScreenHeader title={habit.name} subtitle="Habit details" />
       <View style={styles.tags}>
-        <InfoTag label="Category" value={habit.categoryName} />
+        <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
         <InfoTag label="Frequency" value={habit.frequency} />
       </View>
 

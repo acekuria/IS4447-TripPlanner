@@ -2,9 +2,9 @@ import { db } from './client';
 import { categories, habits } from './schema';
 
 const defaultCategories = [
-  { id: 1, name: 'Health' },
-  { id: 2, name: 'Learning' },
-  { id: 3, name: 'Productivity' },
+  { id: 1, name: 'Health', color: '#22C55E' },
+  { id: 2, name: 'Learning', color: '#3B82F6' },
+  { id: 3, name: 'Productivity', color: '#F59E0B' },
 ];
 
 const defaultHabits = [

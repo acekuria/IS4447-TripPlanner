@@ -7,6 +7,7 @@ export type HabitRecord = {
   name: string;
   categoryId: number;
   categoryName: string;
+  categoryColor: string;
   frequency: string;
   count: number;
 };
@@ -18,6 +19,7 @@ export async function getHabits(): Promise<HabitRecord[]> {
       name: habits.name,
       categoryId: habits.categoryId,
       categoryName: categories.name,
+      categoryColor: categories.color,
       frequency: habits.frequency,
       count: habits.count,
     })

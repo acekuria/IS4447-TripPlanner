@@ -18,10 +18,7 @@ describe('seedHabitsIfEmpty', () => {
   it('inserts categories and habits when the tables are empty', async () => {
     const mockCategoryInsert = jest.fn().mockResolvedValue(undefined);
     const mockHabitInsert = jest.fn().mockResolvedValue(undefined);
-    const mockFrom = jest
-      .fn()
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([]);
+    const mockFrom = jest.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
     mockDb.select.mockReturnValue({ from: mockFrom });
     mockDb.insert
@@ -31,7 +28,7 @@ describe('seedHabitsIfEmpty', () => {
     await seedHabitsIfEmpty();
 
     expect(mockCategoryInsert).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ name: 'Health' })])
+      expect.arrayContaining([expect.objectContaining({ name: 'Health', color: '#22C55E' })])
     );
     expect(mockHabitInsert).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ name: 'Drink Water' })])
@@ -41,7 +38,7 @@ describe('seedHabitsIfEmpty', () => {
   it('does not insert habits when habits already exist', async () => {
     const mockFrom = jest
       .fn()
-      .mockResolvedValueOnce([{ id: 1, name: 'Health' }])
+      .mockResolvedValueOnce([{ id: 1, name: 'Health', color: '#22C55E' }])
       .mockResolvedValueOnce([
         { id: 1, name: 'Drink Water', categoryId: 1, frequency: 'daily', count: 0 },
       ]);

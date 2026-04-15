@@ -1,8 +1,7 @@
+import { Habit } from '@/app/_layout';
 import InfoTag from '@/components/ui/info-tag';
-import PrimaryButton from '@/components/ui/primary-button';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Habit } from '@/app/_layout';
 
 type Props = {
   habit: Habit;
@@ -27,7 +26,7 @@ export default function HabitCard({ habit }: Props) {
       </View>
 
       <View style={styles.tags}>
-        <InfoTag label="Category" value={habit.categoryName} />
+        <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
         <InfoTag label="Frequency" value={habit.frequency} />
       </View>
     </Pressable>
