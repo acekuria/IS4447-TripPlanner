@@ -153,6 +153,14 @@ export async function markHabitDoneToday(habitId: number) {
   return true;
 }
 
+export async function unmarkHabitDoneToday(habitId: number) {
+  const today = getTodayDateString();
+
+  await db
+    .delete(habitLogs)
+    .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+}
+
 export async function getHabitProgress(habitId: number, frequency: string): Promise<HabitProgress> {
   const logs = await db
     .select({

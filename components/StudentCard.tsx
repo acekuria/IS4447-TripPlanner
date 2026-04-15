@@ -1,7 +1,7 @@
 import { Habit, HabitContext } from '@/app/_layout';
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
-import { getHabits, markHabitDoneToday } from '@/db/queries';
+import { getHabits, markHabitDoneToday, unmarkHabitDoneToday } from '@/db/queries';
 import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -18,12 +18,17 @@ export default function HabitCard({ habit }: Props) {
   const openDetails = () =>
     router.push({ pathname: '/student/[id]', params: { id: habit.id.toString() } });
 
-  const markDone = async () => {
-    if (!context || habit.completedToday) {
+  const toggleToday = async () => {
+    if (!context) {
       return;
     }
 
-    await markHabitDoneToday(habit.id);
+    if (habit.completedToday) {
+      await unmarkHabitDoneToday(habit.id);
+    } else {
+      await markHabitDoneToday(habit.id);
+    }
+
     const rows = await getHabits();
     context.setHabits(rows);
   };
@@ -49,11 +54,11 @@ export default function HabitCard({ habit }: Props) {
 
       <PrimaryButton
         compact
-        disabled={habit.completedToday}
         label={habit.completedToday ? 'Done today' : 'Mark as done today'}
         onPress={() => {
-          void markDone();
+          void toggleToday();
         }}
+        variant={habit.completedToday ? 'secondary' : 'primary'}
       />
     </View>
   );

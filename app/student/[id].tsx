@@ -2,7 +2,7 @@ import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { db } from '@/db/client';
-import { getHabitProgress, getHabits, markHabitDoneToday, type HabitProgress } from '@/db/queries';
+import { getHabitProgress, getHabits, markHabitDoneToday, type HabitProgress, unmarkHabitDoneToday } from '@/db/queries';
 import { habits as habitsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -57,8 +57,13 @@ export default function HabitDetail() {
     router.back();
   };
 
-  const markDone = async () => {
-    await markHabitDoneToday(habit.id);
+  const toggleToday = async () => {
+    if (habit.completedToday) {
+      await unmarkHabitDoneToday(habit.id);
+    } else {
+      await markHabitDoneToday(habit.id);
+    }
+
     await refreshHabitData();
   };
 
@@ -74,9 +79,9 @@ export default function HabitDetail() {
 
         <PrimaryButton
           label={habit.completedToday ? 'Done today' : 'Mark as done today'}
-          disabled={habit.completedToday}
+          variant={habit.completedToday ? 'secondary' : 'primary'}
           onPress={() => {
-            void markDone();
+            void toggleToday();
           }}
         />
 
