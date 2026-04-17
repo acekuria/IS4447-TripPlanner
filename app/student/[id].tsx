@@ -68,12 +68,22 @@ export default function HabitDetail() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title={habit.name} subtitle="Habit details" onBack={() => router.back()} />
+        <ScreenHeader title={habit.name} onBack={() => router.back()} />
         <View style={styles.tags}>
           <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
           <InfoTag label="Frequency" value={habit.frequency} />
-          <InfoTag label="Streak" value={`${progress.currentStreak}`} />
+          <InfoTag
+            label="Streak"
+            value={`${progress.currentStreak} ${habit.frequency === 'weekly' ? 'week' : 'day'}${progress.currentStreak !== 1 ? 's' : ''}`}
+          />
         </View>
+
+        {habit.notes ? (
+          <View style={styles.notesSection}>
+            <Text style={styles.notesSectionTitle}>Notes</Text>
+            <Text style={styles.notesText}>{habit.notes}</Text>
+          </View>
+        ) : null}
 
         {habit.targetCount !== null && (
           <View style={styles.goalSection}>
@@ -126,7 +136,7 @@ export default function HabitDetail() {
         <View style={styles.buttonSpacing}>
           <PrimaryButton
             label="Delete"
-            variant="secondary"
+            variant="danger"
             onPress={() => {
               void deleteHabit();
             }}
@@ -166,6 +176,26 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginBottom: 18,
   },
+  notesSection: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 14,
+  },
+  notesSectionTitle: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  notesText: {
+    color: '#374151',
+    fontSize: 14,
+    lineHeight: 20,
+  },
   buttonSpacing: {
     marginTop: 10,
   },
@@ -197,9 +227,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   progressBarTrack: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#CBD5E1',
     borderRadius: 999,
-    height: 6,
+    height: 8,
     overflow: 'hidden',
   },
   progressBarFill: {

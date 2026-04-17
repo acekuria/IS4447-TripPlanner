@@ -46,6 +46,9 @@ const habitColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(habi
 if (!habitColumns.some((c) => c.name === 'log_type')) {
   sqlite.execSync(`ALTER TABLE habits ADD COLUMN log_type TEXT NOT NULL DEFAULT 'completion';`);
 }
+if (!habitColumns.some((c) => c.name === 'notes')) {
+  sqlite.execSync(`ALTER TABLE habits ADD COLUMN notes TEXT;`);
+}
 
 const targetColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(targets);');
 if (targetColumns.length > 0 && !targetColumns.some((c) => c.name === 'period')) {

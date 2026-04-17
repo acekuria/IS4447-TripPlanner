@@ -10,6 +10,7 @@ export type HabitRecord = {
   categoryColor: string;
   frequency: string;
   logType: 'completion' | 'count';
+  notes: string | null;
   count: number;
   completedToday: boolean;
   todayCount: number;
@@ -104,6 +105,7 @@ export async function getHabits(): Promise<HabitRecord[]> {
       categoryColor: categories.color,
       frequency: habits.frequency,
       logType: habits.logType,
+      notes: habits.notes,
       count: habits.count,
     })
     .from(habits)

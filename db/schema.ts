@@ -14,6 +14,7 @@ export const habits = sqliteTable('habits', {
     .references(() => categories.id),
   frequency: text('frequency').notNull(),
   logType: text('log_type').notNull().default('completion'),
+  notes: text('notes'),
   count: integer('count').notNull().default(0),
 });
 

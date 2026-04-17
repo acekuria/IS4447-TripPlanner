@@ -171,9 +171,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   progressBarTrack: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#CBD5E1',
     borderRadius: 999,
-    height: 6,
+    height: 8,
     overflow: 'hidden',
   },
   progressBarFill: {

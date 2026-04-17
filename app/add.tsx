@@ -22,6 +22,7 @@ export default function AddHabit() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [logType, setLogType] = useState<'completion' | 'count'>('completion');
+  const [notes, setNotes] = useState('');
   const [goalTarget, setGoalTarget] = useState('');
   const [goalPeriod, setGoalPeriod] = useState<'weekly' | 'monthly'>('weekly');
 
@@ -48,7 +49,7 @@ export default function AddHabit() {
 
     const [inserted] = await db
       .insert(habitsTable)
-      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, count: 0 })
+      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, notes: notes.trim() || null, count: 0 })
       .returning({ id: habitsTable.id });
 
     const parsedTarget = parseInt(goalTarget, 10);
@@ -112,6 +113,8 @@ export default function AddHabit() {
               );
             })}
           </View>
+
+          <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="e.g. tips, reminders, context" />
 
           <Text style={styles.label}>Logging</Text>
           <View style={styles.optionRow}>

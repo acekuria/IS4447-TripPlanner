@@ -24,6 +24,7 @@ export default function EditHabit() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [logType, setLogType] = useState<'completion' | 'count'>('completion');
+  const [notes, setNotes] = useState('');
   const [goalTarget, setGoalTarget] = useState('');
   const [goalPeriod, setGoalPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const habit = context?.habits.find((item: Habit) => item.id === Number(id));
@@ -43,6 +44,7 @@ export default function EditHabit() {
     setSelectedCategoryId(habit.categoryId);
     setFrequency(habit.frequency as 'daily' | 'weekly');
     setLogType((habit.logType as 'completion' | 'count') ?? 'completion');
+    setNotes(habit.notes ?? '');
     setGoalTarget(habit.targetCount !== null ? String(habit.targetCount) : '');
     setGoalPeriod((habit.targetPeriod as 'weekly' | 'monthly') ?? 'weekly');
   }, [habit]);
@@ -58,7 +60,7 @@ export default function EditHabit() {
 
     await db
       .update(habitsTable)
-      .set({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType })
+      .set({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, notes: notes.trim() || null })
       .where(eq(habitsTable.id, Number(id)));
 
     const parsedTarget = parseInt(goalTarget, 10);
@@ -123,6 +125,8 @@ export default function EditHabit() {
             );
           })}
         </View>
+
+        <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="e.g. tips, reminders, context" />
 
         <Text style={styles.label}>Logging</Text>
         <View style={styles.optionRow}>
