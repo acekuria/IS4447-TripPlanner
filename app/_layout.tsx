@@ -33,7 +33,7 @@ export default function RootLayout() {
 
   return (
     <HabitContext.Provider value={{ habits, setHabits }}>
-      <Stack />
+      <Stack screenOptions={{ headerShown: false }} />
     </HabitContext.Provider>
   );
 }

@@ -55,7 +55,7 @@ export default function HabitCard({ habit }: Props) {
           <View style={styles.weeklyProgress}>
             <View style={styles.weeklyProgressRow}>
               <Text style={styles.weeklyProgressText}>
-                {habit.targetProgress}/{habit.targetCount} this {habit.targetPeriod}
+                {habit.targetProgress}/{habit.targetCount} this {habit.targetPeriod === 'weekly' ? 'week' : 'month'}
               </Text>
               {habit.targetMet ? (
                 <Text style={styles.targetMet}>Target met</Text>

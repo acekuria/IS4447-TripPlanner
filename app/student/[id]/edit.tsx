@@ -72,7 +72,7 @@ export default function EditHabit() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScreenHeader title="Edit Habit" subtitle={`Update ${habit.name}`} />
+      <ScreenHeader title="Edit Habit" subtitle={`Update ${habit.name}`} onBack={() => router.back()} />
       <View style={styles.form}>
         <FormField label="Habit Name" value={name} onChangeText={setName} />
 

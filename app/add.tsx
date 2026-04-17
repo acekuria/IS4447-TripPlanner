@@ -62,7 +62,7 @@ export default function AddHabit() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title="Add Habit" subtitle="Create a new habit to track." />
+        <ScreenHeader title="Add Habit" subtitle="Create a new habit to track." onBack={() => router.back()} />
         <View style={styles.form}>
           <FormField label="Habit Name" value={name} onChangeText={setName} />
 

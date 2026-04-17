@@ -1,10 +1,8 @@
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
-import { db } from '@/db/client';
+import { sqlite } from '@/db/client';
 import { getHabitProgress, getHabits, markHabitDoneToday, type HabitProgress, unmarkHabitDoneToday } from '@/db/queries';
-import { habits as habitsTable } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -51,7 +49,7 @@ export default function HabitDetail() {
   };
 
   const deleteHabit = async () => {
-    await db.delete(habitsTable).where(eq(habitsTable.id, Number(id)));
+    sqlite.execSync(`DELETE FROM habits WHERE id = ${Number(id)}`);
     const rows = await getHabits();
     setHabits(rows);
     router.back();
@@ -70,12 +68,40 @@ export default function HabitDetail() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title={habit.name} subtitle="Habit details" />
+        <ScreenHeader title={habit.name} subtitle="Habit details" onBack={() => router.back()} />
         <View style={styles.tags}>
           <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
           <InfoTag label="Frequency" value={habit.frequency} />
           <InfoTag label="Streak" value={`${progress.currentStreak}`} />
         </View>
+
+        {habit.targetCount !== null && (
+          <View style={styles.goalSection}>
+            <View style={styles.goalRow}>
+              <Text style={styles.goalText}>
+                {habit.targetProgress}/{habit.targetCount} this {habit.targetPeriod === 'weekly' ? 'week' : 'month'}
+              </Text>
+              {habit.targetMet ? (
+                <Text style={styles.targetMet}>Target met</Text>
+              ) : (
+                <Text style={styles.remaining}>
+                  {habit.targetCount - habit.targetProgress} remaining
+                </Text>
+              )}
+            </View>
+            <View style={styles.progressBarTrack}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: `${Math.min((habit.targetProgress / habit.targetCount) * 100, 100)}%`,
+                    backgroundColor: habit.targetMet ? '#22C55E' : '#3B82F6',
+                  },
+                ]}
+              />
+            </View>
+          </View>
+        )}
 
         <PrimaryButton
           label={habit.completedToday ? 'Done today' : 'Mark as done today'}
@@ -109,9 +135,7 @@ export default function HabitDetail() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <Text style={styles.sectionSubtitle}>
-            Last {progress.recentLogs.length} completion{progress.recentLogs.length === 1 ? '' : 's'}
-          </Text>
+          <Text style={styles.sectionSubtitle}>Most recent completions</Text>
           {progress.recentLogs.length === 0 ? (
             <Text style={styles.emptyText}>No completions logged yet.</Text>
           ) : (
@@ -144,6 +168,43 @@ const styles = StyleSheet.create({
   },
   buttonSpacing: {
     marginTop: 10,
+  },
+  goalSection: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 14,
+  },
+  goalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  goalText: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  targetMet: {
+    color: '#16A34A',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  remaining: {
+    color: '#6B7280',
+    fontSize: 14,
+  },
+  progressBarTrack: {
+    backgroundColor: '#E5E7EB',
+    borderRadius: 999,
+    height: 6,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    borderRadius: 999,
+    height: 6,
   },
   section: {
     backgroundColor: '#FFFFFF',

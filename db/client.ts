@@ -37,6 +37,7 @@ sqlite.execSync(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     habit_id INTEGER NOT NULL UNIQUE,
     weekly_target INTEGER NOT NULL DEFAULT 1,
+    period TEXT NOT NULL DEFAULT 'weekly',
     FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
   );
 `);
@@ -51,21 +52,6 @@ const hasColorColumn = categoryColumns.some((column) => column.name === 'color')
 
 if (!hasColorColumn) {
   sqlite.execSync(`ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#64748B';`);
-}
-
-const tables = sqlite.getAllSync<{ name: string }>(
-  `SELECT name FROM sqlite_master WHERE type='table' AND name='targets';`
-);
-
-if (tables.length === 0) {
-  sqlite.execSync(`
-    CREATE TABLE targets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      habit_id INTEGER NOT NULL UNIQUE,
-      weekly_target INTEGER NOT NULL DEFAULT 1,
-      FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
-    );
-  `);
 }
 
 export const db = drizzle(sqlite);
