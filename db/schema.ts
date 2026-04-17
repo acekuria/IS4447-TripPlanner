@@ -30,3 +30,13 @@ export const habitLogs = sqliteTable(
     habitDateUnique: uniqueIndex('habit_logs_habit_date_idx').on(table.habitId, table.date),
   })
 );
+
+export const targets = sqliteTable('targets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  habitId: integer('habit_id')
+    .notNull()
+    .unique()
+    .references(() => habits.id, { onDelete: 'cascade' }),
+  targetCount: integer('weekly_target').notNull().default(1),
+  period: text('period').notNull().default('weekly'),
+});

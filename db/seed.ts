@@ -1,5 +1,6 @@
+import { sql, eq } from 'drizzle-orm';
 import { db } from './client';
-import { categories, habits } from './schema';
+import { categories, habits, targets } from './schema';
 
 const defaultCategories = [
   { id: 1, name: 'Health', color: '#22C55E' },
@@ -16,15 +17,26 @@ const defaultHabits = [
 export async function seedHabitsIfEmpty() {
   const existingCategories = await db.select().from(categories);
 
-  if (existingCategories.length === 0) {
-    await db.insert(categories).values(defaultCategories);
-  }
+  await db
+    .insert(categories)
+    .values(defaultCategories)
+    .onConflictDoUpdate({ target: categories.id, set: { color: sql`excluded.color` } });
 
   const existingHabits = await db.select().from(habits);
 
-  if (existingHabits.length > 0) {
-    return;
+  if (existingHabits.length === 0) {
+    await db.insert(habits).values(defaultHabits);
   }
 
-  await db.insert(habits).values(defaultHabits);
+  const weeklyHabits = await db
+    .select({ id: habits.id })
+    .from(habits)
+    .where(eq(habits.frequency, 'weekly'));
+
+  for (const habit of weeklyHabits) {
+    await db
+      .insert(targets)
+      .values({ habitId: habit.id, targetCount: 1, period: 'weekly' })
+      .onConflictDoNothing();
+  }
 }

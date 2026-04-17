@@ -2,15 +2,16 @@ import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { db } from '@/db/client';
-import { getCategories, getHabits } from '@/db/queries';
+import { getCategories, getHabits, setHabitTarget } from '@/db/queries';
 import { habits as habitsTable } from '@/db/schema';
 import { useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Category, HabitContext } from './_layout';
 
 const frequencyOptions = ['daily', 'weekly'] as const;
+const periodOptions = ['weekly', 'monthly'] as const;
 
 export default function AddHabit() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function AddHabit() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
+  const [goalTarget, setGoalTarget] = useState('');
+  const [goalPeriod, setGoalPeriod] = useState<'weekly' | 'monthly'>('weekly');
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -41,12 +44,15 @@ export default function AddHabit() {
       return;
     }
 
-    await db.insert(habitsTable).values({
-      name: name.trim(),
-      categoryId: selectedCategoryId,
-      frequency,
-      count: 0,
-    });
+    const [inserted] = await db
+      .insert(habitsTable)
+      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, count: 0 })
+      .returning({ id: habitsTable.id });
+
+    const parsedTarget = parseInt(goalTarget, 10);
+    if (!isNaN(parsedTarget) && parsedTarget > 0) {
+      await setHabitTarget(inserted.id, parsedTarget, goalPeriod);
+    }
 
     const rows = await getHabits();
     setHabits(rows);
@@ -104,6 +110,34 @@ export default function AddHabit() {
               );
             })}
           </View>
+
+          <Text style={styles.label}>Goal (optional)</Text>
+          <View style={styles.optionRow}>
+            {periodOptions.map((option) => {
+              const isSelected = goalPeriod === option;
+              return (
+                <Pressable
+                  key={option}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select goal period ${option}`}
+                  onPress={() => setGoalPeriod(option)}
+                  style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
+                >
+                  <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                    {option}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <TextInput
+            accessibilityLabel="Goal target, enter number"
+            keyboardType="numeric"
+            placeholder="Times per period (e.g. 5)"
+            value={goalTarget}
+            onChangeText={setGoalTarget}
+            style={styles.input}
+          />
         </View>
         <PrimaryButton label="Save Habit" onPress={saveHabit} />
         <View style={styles.backButton}>
@@ -170,4 +204,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   content: {},
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    borderWidth: 1,
+    fontSize: 15,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
 });

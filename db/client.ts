@@ -32,13 +32,40 @@ sqlite.execSync(`
 
   CREATE UNIQUE INDEX IF NOT EXISTS habit_logs_habit_date_idx
   ON habit_logs (habit_id, date);
+
+  CREATE TABLE IF NOT EXISTS targets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    habit_id INTEGER NOT NULL UNIQUE,
+    weekly_target INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
+  );
 `);
+
+const targetColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(targets);');
+if (targetColumns.length > 0 && !targetColumns.some((c) => c.name === 'period')) {
+  sqlite.execSync(`ALTER TABLE targets ADD COLUMN period TEXT NOT NULL DEFAULT 'weekly';`);
+}
 
 const categoryColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(categories);');
 const hasColorColumn = categoryColumns.some((column) => column.name === 'color');
 
 if (!hasColorColumn) {
   sqlite.execSync(`ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#64748B';`);
+}
+
+const tables = sqlite.getAllSync<{ name: string }>(
+  `SELECT name FROM sqlite_master WHERE type='table' AND name='targets';`
+);
+
+if (tables.length === 0) {
+  sqlite.execSync(`
+    CREATE TABLE targets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      habit_id INTEGER NOT NULL UNIQUE,
+      weekly_target INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
+    );
+  `);
 }
 
 export const db = drizzle(sqlite);

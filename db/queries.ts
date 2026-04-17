@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './client';
-import { categories, habitLogs, habits } from './schema';
+import { categories, habitLogs, habits, targets } from './schema';
 
 export type HabitRecord = {
   id: number;
@@ -12,6 +12,10 @@ export type HabitRecord = {
   count: number;
   completedToday: boolean;
   currentStreak: number;
+  targetCount: number | null;
+  targetPeriod: 'weekly' | 'monthly' | null;
+  targetProgress: number;
+  targetMet: boolean;
 };
 
 export type HabitProgress = {
@@ -109,22 +113,43 @@ export async function getHabits(): Promise<HabitRecord[]> {
     })
     .from(habitLogs);
 
-  const today = getTodayDateString();
-  const logDatesByHabit = new Map<number, string[]>();
+  const targetsRows = await db.select().from(targets);
 
+  const today = getTodayDateString();
+  const weekStart = formatDateString(getWeekStart(parseDateString(today)));
+  const weekEnd = formatDateString(addDays(parseDateString(weekStart), 6));
+  const currentMonth = today.slice(0, 7);
+
+  const logDatesByHabit = new Map<number, string[]>();
   for (const log of logs) {
     const dates = logDatesByHabit.get(log.habitId) ?? [];
     dates.push(log.date);
     logDatesByHabit.set(log.habitId, dates);
   }
 
+  const targetByHabit = new Map(targetsRows.map((t) => [t.habitId, t]));
+
   return rows.map((habit) => {
     const logDates = logDatesByHabit.get(habit.id) ?? [];
+    const targetRow = targetByHabit.get(habit.id) ?? null;
+    const targetCount = targetRow?.targetCount ?? null;
+    const targetPeriod = (targetRow?.period ?? null) as 'weekly' | 'monthly' | null;
+
+    let targetProgress = 0;
+    if (targetPeriod === 'weekly') {
+      targetProgress = logDates.filter((d) => d >= weekStart && d <= weekEnd).length;
+    } else if (targetPeriod === 'monthly') {
+      targetProgress = logDates.filter((d) => d.startsWith(currentMonth)).length;
+    }
 
     return {
       ...habit,
       completedToday: logDates.includes(today),
       currentStreak: calculateStreak(logDates, habit.frequency),
+      targetCount,
+      targetPeriod,
+      targetProgress,
+      targetMet: targetCount !== null && targetProgress >= targetCount,
     };
   });
 }
@@ -159,6 +184,17 @@ export async function unmarkHabitDoneToday(habitId: number) {
   await db
     .delete(habitLogs)
     .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+}
+
+export async function setHabitTarget(habitId: number, targetCount: number, period: 'weekly' | 'monthly') {
+  await db
+    .insert(targets)
+    .values({ habitId, targetCount, period })
+    .onConflictDoUpdate({ target: targets.habitId, set: { targetCount, period } });
+}
+
+export async function deleteHabitTarget(habitId: number) {
+  await db.delete(targets).where(eq(targets.habitId, habitId));
 }
 
 export async function getHabitProgress(habitId: number, frequency: string): Promise<HabitProgress> {

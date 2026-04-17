@@ -2,16 +2,17 @@ import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { db } from '@/db/client';
-import { getCategories, getHabits } from '@/db/queries';
+import { deleteHabitTarget, getCategories, getHabits, setHabitTarget } from '@/db/queries';
 import { habits as habitsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Category, Habit, HabitContext } from '../../_layout';
 
 const frequencyOptions = ['daily', 'weekly'] as const;
+const periodOptions = ['weekly', 'monthly'] as const;
 
 export default function EditHabit() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +22,8 @@ export default function EditHabit() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
+  const [goalTarget, setGoalTarget] = useState('');
+  const [goalPeriod, setGoalPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const habit = context?.habits.find((item: Habit) => item.id === Number(id));
 
   useEffect(() => {
@@ -37,6 +40,8 @@ export default function EditHabit() {
     setName(habit.name);
     setSelectedCategoryId(habit.categoryId);
     setFrequency(habit.frequency as 'daily' | 'weekly');
+    setGoalTarget(habit.targetCount !== null ? String(habit.targetCount) : '');
+    setGoalPeriod((habit.targetPeriod as 'weekly' | 'monthly') ?? 'weekly');
   }, [habit]);
 
   if (!context || !habit) return null;
@@ -52,6 +57,13 @@ export default function EditHabit() {
       .update(habitsTable)
       .set({ name: name.trim(), categoryId: selectedCategoryId, frequency })
       .where(eq(habitsTable.id, Number(id)));
+
+    const parsedTarget = parseInt(goalTarget, 10);
+    if (!isNaN(parsedTarget) && parsedTarget > 0) {
+      await setHabitTarget(Number(id), parsedTarget, goalPeriod);
+    } else {
+      await deleteHabitTarget(Number(id));
+    }
 
     const rows = await getHabits();
     setHabits(rows);
@@ -108,6 +120,34 @@ export default function EditHabit() {
             );
           })}
         </View>
+
+        <Text style={styles.label}>Goal (optional)</Text>
+        <View style={styles.optionRow}>
+          {periodOptions.map((option) => {
+            const isSelected = goalPeriod === option;
+            return (
+              <Pressable
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Select goal period ${option}`}
+                onPress={() => setGoalPeriod(option)}
+                style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
+              >
+                <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <TextInput
+          accessibilityLabel="Goal target, enter number"
+          keyboardType="numeric"
+          placeholder="Times per period (e.g. 5)"
+          value={goalTarget}
+          onChangeText={setGoalTarget}
+          style={styles.input}
+        />
       </View>
 
       <PrimaryButton label="Save Changes" onPress={saveChanges} />
@@ -172,5 +212,15 @@ const styles = StyleSheet.create({
   },
   buttonSpacing: {
     marginTop: 10,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    borderWidth: 1,
+    fontSize: 15,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
 });
