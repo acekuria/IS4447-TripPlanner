@@ -13,6 +13,7 @@ export const habits = sqliteTable('habits', {
     .notNull()
     .references(() => categories.id),
   frequency: text('frequency').notNull(),
+  logType: text('log_type').notNull().default('completion'),
   count: integer('count').notNull().default(0),
 });
 

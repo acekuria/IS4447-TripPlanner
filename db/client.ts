@@ -42,6 +42,11 @@ sqlite.execSync(`
   );
 `);
 
+const habitColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(habits);');
+if (!habitColumns.some((c) => c.name === 'log_type')) {
+  sqlite.execSync(`ALTER TABLE habits ADD COLUMN log_type TEXT NOT NULL DEFAULT 'completion';`);
+}
+
 const targetColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(targets);');
 if (targetColumns.length > 0 && !targetColumns.some((c) => c.name === 'period')) {
   sqlite.execSync(`ALTER TABLE targets ADD COLUMN period TEXT NOT NULL DEFAULT 'weekly';`);

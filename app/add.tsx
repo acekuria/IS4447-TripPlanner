@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Category, HabitContext } from './_layout';
 
 const frequencyOptions = ['daily', 'weekly'] as const;
+const logTypeOptions = ['completion', 'count'] as const;
 const periodOptions = ['weekly', 'monthly'] as const;
 
 export default function AddHabit() {
@@ -20,6 +21,7 @@ export default function AddHabit() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
+  const [logType, setLogType] = useState<'completion' | 'count'>('completion');
   const [goalTarget, setGoalTarget] = useState('');
   const [goalPeriod, setGoalPeriod] = useState<'weekly' | 'monthly'>('weekly');
 
@@ -46,7 +48,7 @@ export default function AddHabit() {
 
     const [inserted] = await db
       .insert(habitsTable)
-      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, count: 0 })
+      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, count: 0 })
       .returning({ id: habitsTable.id });
 
     const parsedTarget = parseInt(goalTarget, 10);
@@ -101,6 +103,26 @@ export default function AddHabit() {
                   accessibilityRole="button"
                   accessibilityLabel={`Select frequency ${option}`}
                   onPress={() => setFrequency(option)}
+                  style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
+                >
+                  <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                    {option}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.label}>Logging</Text>
+          <View style={styles.optionRow}>
+            {logTypeOptions.map((option) => {
+              const isSelected = logType === option;
+              return (
+                <Pressable
+                  key={option}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select log type ${option}`}
+                  onPress={() => setLogType(option)}
                   style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
                 >
                   <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>

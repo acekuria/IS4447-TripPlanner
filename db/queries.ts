@@ -9,8 +9,10 @@ export type HabitRecord = {
   categoryName: string;
   categoryColor: string;
   frequency: string;
+  logType: 'completion' | 'count';
   count: number;
   completedToday: boolean;
+  todayCount: number;
   currentStreak: number;
   targetCount: number | null;
   targetPeriod: 'weekly' | 'monthly' | null;
@@ -101,6 +103,7 @@ export async function getHabits(): Promise<HabitRecord[]> {
       categoryName: categories.name,
       categoryColor: categories.color,
       frequency: habits.frequency,
+      logType: habits.logType,
       count: habits.count,
     })
     .from(habits)
@@ -110,6 +113,7 @@ export async function getHabits(): Promise<HabitRecord[]> {
     .select({
       habitId: habitLogs.habitId,
       date: habitLogs.date,
+      value: habitLogs.value,
     })
     .from(habitLogs);
 
@@ -120,31 +124,45 @@ export async function getHabits(): Promise<HabitRecord[]> {
   const weekEnd = formatDateString(addDays(parseDateString(weekStart), 6));
   const currentMonth = today.slice(0, 7);
 
-  const logDatesByHabit = new Map<number, string[]>();
+  const logsByHabit = new Map<number, Array<{ date: string; value: number }>>();
   for (const log of logs) {
-    const dates = logDatesByHabit.get(log.habitId) ?? [];
-    dates.push(log.date);
-    logDatesByHabit.set(log.habitId, dates);
+    const arr = logsByHabit.get(log.habitId) ?? [];
+    arr.push({ date: log.date, value: log.value });
+    logsByHabit.set(log.habitId, arr);
   }
 
   const targetByHabit = new Map(targetsRows.map((t) => [t.habitId, t]));
 
   return rows.map((habit) => {
-    const logDates = logDatesByHabit.get(habit.id) ?? [];
+    const habitLogEntries = logsByHabit.get(habit.id) ?? [];
+    const logDates = habitLogEntries.map((l) => l.date);
+    const logType = (habit.logType ?? 'completion') as 'completion' | 'count';
+
+    const todayEntry = habitLogEntries.find((l) => l.date === today);
+    const todayCount = todayEntry?.value ?? 0;
+
     const targetRow = targetByHabit.get(habit.id) ?? null;
     const targetCount = targetRow?.targetCount ?? null;
     const targetPeriod = (targetRow?.period ?? null) as 'weekly' | 'monthly' | null;
 
     let targetProgress = 0;
     if (targetPeriod === 'weekly') {
-      targetProgress = logDates.filter((d) => d >= weekStart && d <= weekEnd).length;
+      const periodEntries = habitLogEntries.filter((l) => l.date >= weekStart && l.date <= weekEnd);
+      targetProgress = logType === 'count'
+        ? periodEntries.reduce((sum, l) => sum + l.value, 0)
+        : periodEntries.length;
     } else if (targetPeriod === 'monthly') {
-      targetProgress = logDates.filter((d) => d.startsWith(currentMonth)).length;
+      const periodEntries = habitLogEntries.filter((l) => l.date.startsWith(currentMonth));
+      targetProgress = logType === 'count'
+        ? periodEntries.reduce((sum, l) => sum + l.value, 0)
+        : periodEntries.length;
     }
 
     return {
       ...habit,
-      completedToday: logDates.includes(today),
+      logType,
+      completedToday: todayCount > 0,
+      todayCount,
       currentStreak: calculateStreak(logDates, habit.frequency),
       targetCount,
       targetPeriod,
@@ -195,6 +213,44 @@ export async function setHabitTarget(habitId: number, targetCount: number, perio
 
 export async function deleteHabitTarget(habitId: number) {
   await db.delete(targets).where(eq(targets.habitId, habitId));
+}
+
+export async function incrementHabitCount(habitId: number) {
+  const today = getTodayDateString();
+  const existing = await db
+    .select({ id: habitLogs.id, value: habitLogs.value })
+    .from(habitLogs)
+    .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+
+  if (existing.length > 0) {
+    await db
+      .update(habitLogs)
+      .set({ value: existing[0].value + 1 })
+      .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+  } else {
+    await db.insert(habitLogs).values({ habitId, date: today, value: 1 });
+  }
+}
+
+export async function decrementHabitCount(habitId: number) {
+  const today = getTodayDateString();
+  const existing = await db
+    .select({ id: habitLogs.id, value: habitLogs.value })
+    .from(habitLogs)
+    .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+
+  if (existing.length === 0) return;
+
+  if (existing[0].value <= 1) {
+    await db
+      .delete(habitLogs)
+      .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+  } else {
+    await db
+      .update(habitLogs)
+      .set({ value: existing[0].value - 1 })
+      .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, today)));
+  }
 }
 
 export async function getHabitProgress(habitId: number, frequency: string): Promise<HabitProgress> {

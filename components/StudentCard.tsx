@@ -1,7 +1,7 @@
 import { Habit, HabitContext } from '@/app/_layout';
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
-import { getHabits, markHabitDoneToday, unmarkHabitDoneToday } from '@/db/queries';
+import { decrementHabitCount, getHabits, incrementHabitCount, markHabitDoneToday, unmarkHabitDoneToday } from '@/db/queries';
 import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -18,19 +18,30 @@ export default function HabitCard({ habit }: Props) {
   const openDetails = () =>
     router.push({ pathname: '/student/[id]', params: { id: habit.id.toString() } });
 
-  const toggleToday = async () => {
-    if (!context) {
-      return;
-    }
+  const refresh = async () => {
+    if (!context) return;
+    const rows = await getHabits();
+    context.setHabits(rows);
+  };
 
+  const toggleToday = async () => {
+    if (!context) return;
     if (habit.completedToday) {
       await unmarkHabitDoneToday(habit.id);
     } else {
       await markHabitDoneToday(habit.id);
     }
+    await refresh();
+  };
 
-    const rows = await getHabits();
-    context.setHabits(rows);
+  const increment = async () => {
+    await incrementHabitCount(habit.id);
+    await refresh();
+  };
+
+  const decrement = async () => {
+    await decrementHabitCount(habit.id);
+    await refresh();
   };
 
   return (
@@ -80,14 +91,34 @@ export default function HabitCard({ habit }: Props) {
         )}
       </Pressable>
 
-      <PrimaryButton
-        compact
-        label={habit.completedToday ? 'Done today' : 'Mark as done today'}
-        onPress={() => {
-          void toggleToday();
-        }}
-        variant={habit.completedToday ? 'secondary' : 'primary'}
-      />
+      {habit.logType === 'count' ? (
+        <View style={styles.counter}>
+          <Pressable
+            onPress={() => { void decrement(); }}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease count"
+            style={styles.counterButton}
+          >
+            <Text style={styles.counterButtonText}>−</Text>
+          </Pressable>
+          <Text style={styles.counterValue}>{habit.todayCount} today</Text>
+          <Pressable
+            onPress={() => { void increment(); }}
+            accessibilityRole="button"
+            accessibilityLabel="Increase count"
+            style={styles.counterButton}
+          >
+            <Text style={styles.counterButtonText}>+</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <PrimaryButton
+          compact
+          label={habit.completedToday ? 'Done today' : 'Mark as done today'}
+          onPress={() => { void toggleToday(); }}
+          variant={habit.completedToday ? 'secondary' : 'primary'}
+        />
+      )}
     </View>
   );
 }
@@ -148,5 +179,30 @@ const styles = StyleSheet.create({
   progressBarFill: {
     borderRadius: 999,
     height: 6,
+  },
+  counter: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  counterButton: {
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  counterButtonText: {
+    color: '#0F172A',
+    fontSize: 22,
+    fontWeight: '500',
+    lineHeight: 26,
+  },
+  counterValue: {
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

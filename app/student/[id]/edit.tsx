@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Category, Habit, HabitContext } from '../../_layout';
 
 const frequencyOptions = ['daily', 'weekly'] as const;
+const logTypeOptions = ['completion', 'count'] as const;
 const periodOptions = ['weekly', 'monthly'] as const;
 
 export default function EditHabit() {
@@ -22,6 +23,7 @@ export default function EditHabit() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
+  const [logType, setLogType] = useState<'completion' | 'count'>('completion');
   const [goalTarget, setGoalTarget] = useState('');
   const [goalPeriod, setGoalPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const habit = context?.habits.find((item: Habit) => item.id === Number(id));
@@ -40,6 +42,7 @@ export default function EditHabit() {
     setName(habit.name);
     setSelectedCategoryId(habit.categoryId);
     setFrequency(habit.frequency as 'daily' | 'weekly');
+    setLogType((habit.logType as 'completion' | 'count') ?? 'completion');
     setGoalTarget(habit.targetCount !== null ? String(habit.targetCount) : '');
     setGoalPeriod((habit.targetPeriod as 'weekly' | 'monthly') ?? 'weekly');
   }, [habit]);
@@ -55,7 +58,7 @@ export default function EditHabit() {
 
     await db
       .update(habitsTable)
-      .set({ name: name.trim(), categoryId: selectedCategoryId, frequency })
+      .set({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType })
       .where(eq(habitsTable.id, Number(id)));
 
     const parsedTarget = parseInt(goalTarget, 10);
@@ -111,6 +114,26 @@ export default function EditHabit() {
                 accessibilityRole="button"
                 accessibilityLabel={`Select frequency ${option}`}
                 onPress={() => setFrequency(option)}
+                style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
+              >
+                <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text style={styles.label}>Logging</Text>
+        <View style={styles.optionRow}>
+          {logTypeOptions.map((option) => {
+            const isSelected = logType === option;
+            return (
+              <Pressable
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Select log type ${option}`}
+                onPress={() => setLogType(option)}
                 style={[styles.optionButton, isSelected && styles.frequencyOptionSelected]}
               >
                 <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
