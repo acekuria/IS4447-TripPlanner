@@ -19,6 +19,8 @@ export type HabitRecord = {
   targetPeriod: 'weekly' | 'monthly' | null;
   targetProgress: number;
   targetMet: boolean;
+  hasLogThisWeek: boolean;
+  hasLogThisMonth: boolean;
 };
 
 export type HabitProgress = {
@@ -160,6 +162,9 @@ export async function getHabits(): Promise<HabitRecord[]> {
         : periodEntries.length;
     }
 
+    const hasLogThisWeek = habitLogEntries.some((l) => l.date >= weekStart && l.date <= weekEnd);
+    const hasLogThisMonth = habitLogEntries.some((l) => l.date.startsWith(currentMonth));
+
     return {
       ...habit,
       logType,
@@ -170,6 +175,8 @@ export async function getHabits(): Promise<HabitRecord[]> {
       targetPeriod,
       targetProgress,
       targetMet: targetCount !== null && targetProgress >= targetCount,
+      hasLogThisWeek,
+      hasLogThisMonth,
     };
   });
 }

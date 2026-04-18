@@ -10,12 +10,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Habit, HabitContext } from '../_layout';
 
 const frequencyOptions = ['All', 'daily', 'weekly'];
+const dateRangeOptions = ['All time', 'Today', 'This week', 'This month'];
 
 export default function IndexScreen() {
   const router = useRouter();
   const context = useContext(HabitContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFrequency, setSelectedFrequency] = useState('All');
+  const [selectedDateRange, setSelectedDateRange] = useState('All time');
 
   useDrizzleStudio(sqlite);
 
@@ -38,8 +40,13 @@ export default function IndexScreen() {
       selectedFrequency === 'All' || habit.frequency === selectedFrequency;
     const matchesCategory =
       selectedCategory === 'All' || habit.categoryName === selectedCategory;
+    const matchesDateRange =
+      selectedDateRange === 'All time' ||
+      (selectedDateRange === 'Today' && habit.completedToday) ||
+      (selectedDateRange === 'This week' && habit.hasLogThisWeek) ||
+      (selectedDateRange === 'This month' && habit.hasLogThisMonth);
 
-    return matchesSearch && matchesFrequency && matchesCategory;
+    return matchesSearch && matchesFrequency && matchesCategory && matchesDateRange;
   });
 
   return (
@@ -90,6 +97,28 @@ export default function IndexScreen() {
               >
                 <Text style={[styles.filterButtonText, isSelected && styles.filterButtonTextSelected]}>
                   {frequency}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.filterSection}>
+        <Text style={styles.filterLabel}>Activity</Text>
+        <View style={styles.filterRow}>
+          {dateRangeOptions.map((range) => {
+            const isSelected = selectedDateRange === range;
+            return (
+              <Pressable
+                key={range}
+                accessibilityLabel={`Filter by activity ${range}`}
+                accessibilityRole="button"
+                onPress={() => setSelectedDateRange(range)}
+                style={[styles.filterButton, isSelected && styles.filterButtonSelected]}
+              >
+                <Text style={[styles.filterButtonText, isSelected && styles.filterButtonTextSelected]}>
+                  {range}
                 </Text>
               </Pressable>
             );
