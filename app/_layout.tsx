@@ -1,7 +1,8 @@
-import { Stack } from 'expo-router';
-import { createContext, useEffect, useState } from 'react';
-import { seedHabitsIfEmpty } from '@/db/seed';
+import { AuthProvider, useAuth } from '@/contexts/auth';
 import { getHabits, HabitRecord } from '@/db/queries';
+import { seedHabitsIfEmpty } from '@/db/seed';
+import { useRouter, useSegments, Stack } from 'expo-router';
+import { createContext, useEffect, useState } from 'react';
 
 export type Habit = HabitRecord;
 
@@ -18,22 +19,45 @@ type HabitContextType = {
 
 export const HabitContext = createContext<HabitContextType | null>(null);
 
-export default function RootLayout() {
+function AppNavigator() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
   const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
-    const loadHabits = async () => {
+    if (isLoading) return;
+    const inTabsGroup = segments[0] === '(tabs)';
+    if (!user && inTabsGroup) {
+      router.replace('/login' as never);
+    } else if (user && !inTabsGroup) {
+      router.replace('/(tabs)' as never);
+    }
+  }, [user, isLoading, segments]);
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
       await seedHabitsIfEmpty();
       const rows = await getHabits();
       setHabits(rows);
     };
+    void load();
+  }, [user]);
 
-    void loadHabits();
-  }, []);
+  if (isLoading) return null;
 
   return (
     <HabitContext.Provider value={{ habits, setHabits }}>
       <Stack screenOptions={{ headerShown: false }} />
     </HabitContext.Provider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 }

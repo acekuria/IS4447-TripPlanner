@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
-import { db } from './client';
-import { categories, habitLogs, habits, targets } from './schema';
+import { db, sqlite } from './client';
+import { categories, habitLogs, habits, targets, users } from './schema';
 
 export type HabitRecord = {
   id: number;
@@ -423,4 +423,67 @@ export async function getHabitProgress(habitId: number, frequency: string): Prom
     currentStreak,
     recentLogs: logs.slice(0, 7),
   };
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export type AuthUser = { id: number; name: string; email: string };
+
+export async function registerUser(
+  name: string,
+  email: string,
+  password: string
+): Promise<{ success: true; user: AuthUser } | { success: false; error: string }> {
+  const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email.toLowerCase()));
+  if (existing.length > 0) return { success: false, error: 'An account with that email already exists.' };
+
+  const now = getTodayDateString();
+  const result = await db
+    .insert(users)
+    .values({ name: name.trim(), email: email.toLowerCase().trim(), password, createdAt: now })
+    .returning({ id: users.id, name: users.name, email: users.email });
+
+  const user = result[0];
+  sqlite.execSync(`INSERT OR REPLACE INTO sessions (id, user_id) VALUES (1, ${user.id})`);
+  return { success: true, user };
+}
+
+export async function loginUser(
+  email: string,
+  password: string
+): Promise<{ success: true; user: AuthUser } | { success: false; error: string }> {
+  const rows = await db
+    .select({ id: users.id, name: users.name, email: users.email, password: users.password })
+    .from(users)
+    .where(eq(users.email, email.toLowerCase().trim()));
+
+  if (rows.length === 0) return { success: false, error: 'No account found with that email.' };
+  if (rows[0].password !== password) return { success: false, error: 'Incorrect password.' };
+
+  const user = { id: rows[0].id, name: rows[0].name, email: rows[0].email };
+  sqlite.execSync(`INSERT OR REPLACE INTO sessions (id, user_id) VALUES (1, ${user.id})`);
+  return { success: true, user };
+}
+
+export async function getSessionUser(): Promise<AuthUser | null> {
+  const rows = sqlite.getAllSync<{ user_id: number }>(
+    'SELECT user_id FROM sessions WHERE id = 1'
+  );
+  if (rows.length === 0) return null;
+
+  const userRows = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(eq(users.id, rows[0].user_id));
+
+  return userRows[0] ?? null;
+}
+
+export function logoutUser() {
+  sqlite.execSync('DELETE FROM sessions WHERE id = 1');
+}
+
+export async function deleteUser(id: number) {
+  logoutUser();
+  await db.delete(users).where(eq(users.id, id));
 }

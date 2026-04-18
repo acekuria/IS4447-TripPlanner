@@ -1,13 +1,13 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 
 type Props = {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-};
+} & Pick<TextInputProps, 'secureTextEntry' | 'keyboardType' | 'autoCapitalize' | 'multiline' | 'numberOfLines'>;
 
-export default function FormField({ label, value, onChangeText, placeholder }: Props) {
+export default function FormField({ label, value, onChangeText, placeholder, ...rest }: Props) {
   return (
     <View style={styles.wrapper}>
       <Text accessibilityRole="text" style={styles.label}>{label}</Text>
@@ -16,7 +16,8 @@ export default function FormField({ label, value, onChangeText, placeholder }: P
         placeholder={placeholder ?? label}
         value={value}
         onChangeText={onChangeText}
-        style={styles.input}
+        style={[styles.input, rest.multiline && { height: 80, textAlignVertical: 'top' }]}
+        {...rest}
       />
     </View>
   );
