@@ -1,3 +1,4 @@
+import EmptyState from '@/components/ui/empty-state';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { deleteCategory, getCategoriesWithCount } from '@/db/queries';
@@ -52,7 +53,13 @@ export default function CategoriesScreen() {
       <PrimaryButton label="Add Category" onPress={() => router.push('/category/add')} />
       <ScrollView contentContainerStyle={styles.list}>
         {categories.length === 0 ? (
-          <Text style={styles.empty}>No categories yet. Add one to get started.</Text>
+          <EmptyState
+            icon="folder-outline"
+            title="No categories yet"
+            subtitle="Categories help you organise your habits by theme."
+            actionLabel="Add Category"
+            onAction={() => router.push('/category/add')}
+          />
         ) : (
           categories.map((cat) => (
             <View key={cat.id} style={styles.card}>
@@ -95,7 +102,7 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F5F2',
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 10,
@@ -103,12 +110,6 @@ const styles = StyleSheet.create({
   list: {
     paddingTop: 14,
     paddingBottom: 24,
-  },
-  empty: {
-    color: '#64748B',
-    fontSize: 15,
-    marginTop: 24,
-    textAlign: 'center',
   },
   card: {
     alignItems: 'center',

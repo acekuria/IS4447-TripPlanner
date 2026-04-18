@@ -1,8 +1,9 @@
+import EmptyState from '@/components/ui/empty-state';
 import ScreenHeader from '@/components/ui/screen-header';
 import { getInsightsData, InsightsData } from '@/db/queries';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function InsightsScreen() {
@@ -18,7 +19,22 @@ export default function InsightsScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScreenHeader title="Insights" />
-        <Text style={styles.loading}>Loading…</Text>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (data.totalHabits === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScreenHeader title="Insights" />
+        <EmptyState
+          icon="bar-chart-outline"
+          title="No data yet"
+          subtitle="Add some habits and start logging to see your progress here."
+        />
       </SafeAreaView>
     );
   }
@@ -50,7 +66,7 @@ export default function InsightsScreen() {
                     <View
                       style={[
                         styles.barFill,
-                        { height: heightPx, backgroundColor: day.label === 'Today' ? '#3B82F6' : '#22C55E' },
+                        { height: heightPx, backgroundColor: day.label === 'Today' ? '#F47B4F' : '#1D9E75' },
                       ]}
                     />
                   </View>
@@ -126,7 +142,7 @@ function SectionTitle({ children }: { children: string }) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F5F2',
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 10,
@@ -134,11 +150,10 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
-  loading: {
-    color: '#94A3B8',
-    fontSize: 15,
-    marginTop: 40,
-    textAlign: 'center',
+  centered: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
   statsRow: {
     flexDirection: 'row',
@@ -216,7 +231,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   barLabelToday: {
-    color: '#3B82F6',
+    color: '#F47B4F',
     fontWeight: '600',
   },
   breakdownCard: {
@@ -292,7 +307,7 @@ const styles = StyleSheet.create({
   },
   streakBadge: {
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E1F5EE',
     borderRadius: 8,
     flexDirection: 'row',
     gap: 3,
@@ -300,12 +315,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   streakValue: {
-    color: '#1D4ED8',
+    color: '#085041',
     fontSize: 14,
     fontWeight: '700',
   },
   streakUnit: {
-    color: '#3B82F6',
+    color: '#1D9E75',
     fontSize: 11,
   },
   empty: {

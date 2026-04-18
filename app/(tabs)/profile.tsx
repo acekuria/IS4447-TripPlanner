@@ -84,7 +84,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F5F2',
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 10,

@@ -1,6 +1,8 @@
 import HabitCard from '@/components/StudentCard';
+import EmptyState from '@/components/ui/empty-state';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { Colors } from '@/constants/theme';
 import { sqlite } from '@/db/client';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useRouter } from 'expo-router';
@@ -127,8 +129,20 @@ export default function IndexScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.listContent}>
-        {filteredHabits.length === 0 ? (
-          <Text style={styles.emptyText}>No habits match your filters</Text>
+        {habits.length === 0 ? (
+          <EmptyState
+            icon="checkmark-circle-outline"
+            title="No habits yet"
+            subtitle="Start building your routine by adding your first habit."
+            actionLabel="Add Habit"
+            onAction={() => router.push({ pathname: '../add' })}
+          />
+        ) : filteredHabits.length === 0 ? (
+          <EmptyState
+            icon="search-outline"
+            title="No matches"
+            subtitle="Try adjusting your search or filters."
+          />
         ) : (
           filteredHabits.map((habit: Habit) => <HabitCard key={habit.id} habit={habit} />)
         )}
@@ -139,7 +153,7 @@ export default function IndexScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: Colors.surface,
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 10,
@@ -149,10 +163,11 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   searchInput: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#94A3B8',
+    backgroundColor: Colors.white,
+    borderColor: Colors.border,
     borderRadius: 10,
     borderWidth: 1,
+    color: Colors.text,
     marginTop: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -161,7 +176,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   filterLabel: {
-    color: '#475569',
+    color: Colors.muted,
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 8,
@@ -172,29 +187,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterButton: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#94A3B8',
+    backgroundColor: Colors.white,
+    borderColor: Colors.border,
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   filterButtonSelected: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
+    backgroundColor: Colors.primaryLight,
+    borderColor: Colors.primary,
   },
   filterButtonText: {
-    color: '#0F172A',
+    color: Colors.text,
     fontSize: 14,
     fontWeight: '500',
   },
   filterButtonTextSelected: {
-    color: '#FFFFFF',
-  },
-  emptyText: {
-    color: '#475569',
-    fontSize: 16,
-    paddingTop: 8,
-    textAlign: 'center',
+    color: Colors.primary,
+    fontWeight: '600',
   },
 });

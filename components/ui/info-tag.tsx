@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -24,14 +25,14 @@ export default function InfoTag({ label, value, accentColor }: Props) {
       ]}
     >
       <Text style={[styles.label, accent && { color: accent }]}>{label}</Text>
-      <Text style={[styles.value, accent && { color: '#1F2937' }]}>{value}</Text>
+      <Text style={[styles.value, accent && { color: Colors.text }]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   tag: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: Colors.tealLight,
     borderColor: 'transparent',
     borderRadius: 999,
     borderWidth: 1,
@@ -41,13 +42,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   label: {
-    color: '#1D4ED8',
+    color: Colors.tealDark,
     fontSize: 12,
     fontWeight: '700',
     marginRight: 4,
   },
   value: {
-    color: '#1E3A8A',
+    color: Colors.teal,
     fontSize: 12,
     fontWeight: '600',
   },

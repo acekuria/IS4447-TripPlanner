@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import { Habit, HabitContext } from '@/app/_layout';
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
@@ -85,7 +86,7 @@ export default function HabitCard({ habit }: Props) {
                   styles.progressBarFill,
                   {
                     width: `${Math.min((habit.targetProgress / habit.targetCount) * 100, 100)}%`,
-                    backgroundColor: habit.targetMet ? '#22C55E' : '#3B82F6',
+                    backgroundColor: Colors.teal,
                   },
                 ]}
               />
@@ -117,9 +118,9 @@ export default function HabitCard({ habit }: Props) {
       ) : (
         <PrimaryButton
           compact
-          label={habit.completedToday ? 'Done today' : 'Mark as done today'}
+          label={habit.completedToday ? 'Done today ✓' : 'Mark as done today'}
           onPress={() => { void toggleToday(); }}
-          variant={habit.completedToday ? 'secondary' : 'primary'}
+          variant={habit.completedToday ? 'teal' : 'primary'}
         />
       )}
     </View>
@@ -128,8 +129,8 @@ export default function HabitCard({ habit }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
+    backgroundColor: Colors.white,
+    borderColor: Colors.border,
     borderRadius: 14,
     borderWidth: 1,
     marginBottom: 12,
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   progressBarTrack: {
-    backgroundColor: '#CBD5E1',
+    backgroundColor: Colors.border,
     borderRadius: 999,
     height: 8,
     overflow: 'hidden',

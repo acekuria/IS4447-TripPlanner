@@ -105,6 +105,6 @@ describe('IndexScreen — habit list filters', () => {
   it('shows empty state message when no habits match', () => {
     const { getByPlaceholderText, getByText } = renderWithContext(mockHabits);
     fireEvent.changeText(getByPlaceholderText('Search by habit or category'), 'zzznomatch');
-    expect(getByText('No habits match your filters')).toBeTruthy();
+    expect(getByText('No matches')).toBeTruthy();
   });
 });

@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -39,22 +40,22 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   backArrow: {
-    color: '#0F172A',
+    color: Colors.primary,
     fontSize: 18,
     marginRight: 4,
   },
   backLabel: {
-    color: '#0F172A',
+    color: Colors.primary,
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   title: {
-    color: '#111827',
+    color: Colors.text,
     fontSize: 28,
     fontWeight: '700',
   },
   subtitle: {
-    color: '#6B7280',
+    color: Colors.muted,
     fontSize: 14,
     marginTop: 4,
   },

@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import PrimaryButton from '@/components/ui/primary-button';
 import FormField from '@/components/ui/form-field';
 import { useAuth } from '@/contexts/auth';
@@ -79,7 +80,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: Colors.surface,
     flex: 1,
   },
   content: {
@@ -93,42 +94,43 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logo: {
-    backgroundColor: '#0F172A',
-    borderRadius: 20,
-    color: '#FFFFFF',
-    fontSize: 28,
-    height: 64,
-    lineHeight: 64,
+    backgroundColor: Colors.primary,
+    borderRadius: 22,
+    color: Colors.white,
+    fontSize: 30,
+    height: 72,
+    lineHeight: 72,
     textAlign: 'center',
-    width: 64,
-    marginBottom: 12,
+    width: 72,
+    marginBottom: 14,
+    overflow: 'hidden',
   },
   appName: {
-    color: '#0F172A',
-    fontSize: 26,
-    fontWeight: '700',
+    color: Colors.text,
+    fontSize: 28,
+    fontWeight: '800',
     letterSpacing: -0.5,
   },
   tagline: {
-    color: '#64748B',
+    color: Colors.muted,
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 6,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
+    backgroundColor: Colors.white,
+    borderColor: Colors.border,
     borderRadius: 16,
     borderWidth: 1,
     padding: 24,
   },
   title: {
-    color: '#111827',
+    color: Colors.text,
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 20,
   },
   error: {
-    color: '#B91C1C',
+    color: Colors.danger,
     fontSize: 13,
     marginBottom: 12,
   },
@@ -138,11 +140,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   footerText: {
-    color: '#6B7280',
+    color: Colors.muted,
     fontSize: 14,
   },
   link: {
-    color: '#0F172A',
+    color: Colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

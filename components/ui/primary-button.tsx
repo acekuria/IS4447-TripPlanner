@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = {
@@ -5,7 +6,7 @@ type Props = {
   onPress: () => void;
   compact?: boolean;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'teal' | 'danger';
 };
 
 export default function PrimaryButton({
@@ -24,6 +25,7 @@ export default function PrimaryButton({
       style={({ pressed }) => [
         styles.button,
         variant === 'secondary' ? styles.secondary : null,
+        variant === 'teal' ? styles.teal : null,
         variant === 'danger' ? styles.danger : null,
         compact ? styles.compact : null,
         disabled ? styles.disabled : null,
@@ -34,6 +36,7 @@ export default function PrimaryButton({
         style={[
           styles.label,
           variant === 'secondary' ? styles.secondaryLabel : null,
+          variant === 'teal' ? styles.tealLabel : null,
           compact ? styles.compactLabel : null,
           disabled ? styles.disabledLabel : null,
         ]}
@@ -47,18 +50,21 @@ export default function PrimaryButton({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: '#0F766E',
+    backgroundColor: Colors.primary,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 11,
   },
   secondary: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#CBD5E1',
+    backgroundColor: Colors.white,
+    borderColor: Colors.border,
     borderWidth: 1,
   },
+  teal: {
+    backgroundColor: Colors.teal,
+  },
   danger: {
-    backgroundColor: '#B91C1C',
+    backgroundColor: Colors.danger,
   },
   compact: {
     alignSelf: 'flex-start',
@@ -67,24 +73,27 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   disabled: {
-    backgroundColor: '#CBD5E1',
-    borderColor: '#CBD5E1',
+    backgroundColor: Colors.border,
+    borderColor: Colors.border,
   },
   pressed: {
     opacity: 0.85,
   },
   label: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 15,
     fontWeight: '600',
   },
   secondaryLabel: {
-    color: '#0F172A',
+    color: Colors.text,
+  },
+  tealLabel: {
+    color: Colors.white,
   },
   compactLabel: {
     fontSize: 13,
   },
   disabledLabel: {
-    color: '#475569',
+    color: Colors.muted,
   },
 });
