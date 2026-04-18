@@ -59,7 +59,10 @@ export default function HabitCard({ habit }: Props) {
         <View style={styles.tags}>
           <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
           <InfoTag label="Frequency" value={habit.frequency} />
-          <InfoTag label="Streak" value={`${habit.currentStreak}`} />
+          <InfoTag
+            label="Streak"
+            value={`${habit.currentStreak} ${habit.frequency === 'weekly' ? 'week' : 'day'}${habit.currentStreak !== 1 ? 's' : ''}`}
+          />
         </View>
 
         {habit.targetCount !== null && (

@@ -178,6 +178,35 @@ export async function getCategories() {
   return db.select().from(categories);
 }
 
+export async function getCategoriesWithCount() {
+  const cats = await db.select().from(categories);
+  const habitRows = await db.select({ categoryId: habits.categoryId }).from(habits);
+
+  const countMap = new Map<number, number>();
+  for (const h of habitRows) {
+    countMap.set(h.categoryId, (countMap.get(h.categoryId) ?? 0) + 1);
+  }
+
+  return cats.map((cat) => ({ ...cat, habitCount: countMap.get(cat.id) ?? 0 }));
+}
+
+export async function createCategory(name: string, color: string) {
+  await db.insert(categories).values({ name, color });
+}
+
+export async function updateCategory(id: number, name: string, color: string) {
+  await db.update(categories).set({ name, color }).where(eq(categories.id, id));
+}
+
+export async function deleteCategory(id: number): Promise<{ success: boolean; reason?: string }> {
+  const linked = await db.select({ id: habits.id }).from(habits).where(eq(habits.categoryId, id));
+  if (linked.length > 0) {
+    return { success: false, reason: `${linked.length} habit${linked.length === 1 ? '' : 's'} still use this category` };
+  }
+  await db.delete(categories).where(eq(categories.id, id));
+  return { success: true };
+}
+
 export async function markHabitDoneToday(habitId: number) {
   const today = getTodayDateString();
   const existingLog = await db
