@@ -284,6 +284,120 @@ export async function decrementHabitCount(habitId: number) {
   }
 }
 
+export type InsightsData = {
+  totalHabits: number;
+  weeklyCompletionRate: number;
+  bestStreak: number;
+  dailyTotals: Array<{ date: string; label: string; count: number }>;
+  categoryBreakdown: Array<{
+    name: string;
+    color: string;
+    completed: number;
+    possible: number;
+  }>;
+  topStreaks: Array<{ name: string; streak: number; color: string }>;
+};
+
+export async function getInsightsData(): Promise<InsightsData> {
+  const habitRows = await db
+    .select({
+      id: habits.id,
+      name: habits.name,
+      frequency: habits.frequency,
+      categoryId: habits.categoryId,
+      categoryName: categories.name,
+      categoryColor: categories.color,
+    })
+    .from(habits)
+    .innerJoin(categories, eq(habits.categoryId, categories.id));
+
+  const allLogs = await db
+    .select({ habitId: habitLogs.habitId, date: habitLogs.date, value: habitLogs.value })
+    .from(habitLogs);
+
+  const today = parseDateString(getTodayDateString());
+
+  // Build last-7-days date list
+  const days: Array<{ date: string; label: string }> = [];
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push({ date: formatDateString(d), label: i === 0 ? 'Today' : dayLabels[d.getDay()] });
+  }
+
+  const logsByHabit = new Map<number, string[]>();
+  const logsByDate = new Map<string, number>();
+  for (const log of allLogs) {
+    const arr = logsByHabit.get(log.habitId) ?? [];
+    arr.push(log.date);
+    logsByHabit.set(log.habitId, arr);
+    if (days.some((d) => d.date === log.date)) {
+      logsByDate.set(log.date, (logsByDate.get(log.date) ?? 0) + 1);
+    }
+  }
+
+  const dailyTotals = days.map((d) => ({
+    date: d.date,
+    label: d.label,
+    count: logsByDate.get(d.date) ?? 0,
+  }));
+
+  // Weekly completion rate: logged habits / (habits × 7 days) for daily habits this week
+  const weekDates = new Set(days.map((d) => d.date));
+  const dailyHabits = habitRows.filter((h) => h.frequency === 'daily');
+  const possible = dailyHabits.length * 7;
+  const completed = allLogs.filter(
+    (l) => weekDates.has(l.date) && dailyHabits.some((h) => h.id === l.habitId)
+  ).length;
+  const weeklyCompletionRate = possible > 0 ? Math.round((completed / possible) * 100) : 0;
+
+  // Best streak across all habits
+  const streaks = habitRows.map((h) => {
+    const dates = logsByHabit.get(h.id) ?? [];
+    return calculateStreak(dates, h.frequency);
+  });
+  const bestStreak = streaks.length > 0 ? Math.max(...streaks) : 0;
+
+  // Category breakdown: completion days in last 28 days
+  const past28 = new Set<string>();
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    past28.add(formatDateString(d));
+  }
+  const catMap = new Map<
+    number,
+    { name: string; color: string; completed: number; possible: number }
+  >();
+  for (const h of habitRows) {
+    if (!catMap.has(h.categoryId)) {
+      catMap.set(h.categoryId, { name: h.categoryName, color: h.categoryColor, completed: 0, possible: 0 });
+    }
+    const entry = catMap.get(h.categoryId)!;
+    const habitDates = logsByHabit.get(h.id) ?? [];
+    const daysInPeriod = h.frequency === 'daily' ? 28 : 4;
+    entry.possible += daysInPeriod;
+    entry.completed += habitDates.filter((d) => past28.has(d)).length;
+  }
+  const categoryBreakdown = Array.from(catMap.values());
+
+  // Top streaks
+  const topStreaks = habitRows
+    .map((h, i) => ({ name: h.name, streak: streaks[i], color: h.categoryColor }))
+    .sort((a, b) => b.streak - a.streak)
+    .slice(0, 5);
+
+  return {
+    totalHabits: habitRows.length,
+    weeklyCompletionRate,
+    bestStreak,
+    dailyTotals,
+    categoryBreakdown,
+    topStreaks,
+  };
+}
+
 export async function getHabitProgress(habitId: number, frequency: string): Promise<HabitProgress> {
   const logs = await db
     .select({
