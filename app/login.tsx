@@ -2,6 +2,7 @@ import { Colors } from '@/constants/theme';
 import PrimaryButton from '@/components/ui/primary-button';
 import FormField from '@/components/ui/form-field';
 import { useAuth } from '@/contexts/auth';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -39,7 +40,11 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.hero}>
-            <Text style={styles.logo}>✓</Text>
+            <Image
+              source={require('@/assets/images/logo.svg')}
+              style={styles.logo}
+              contentFit="contain"
+            />
             <Text style={styles.appName}>HabitTracker</Text>
             <Text style={styles.tagline}>Build better habits, one day at a time.</Text>
           </View>
@@ -94,16 +99,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logo: {
-    backgroundColor: Colors.primary,
-    borderRadius: 22,
-    color: Colors.white,
-    fontSize: 30,
-    height: 72,
-    lineHeight: 72,
-    textAlign: 'center',
-    width: 72,
+    height: 90,
+    width: 90,
     marginBottom: 14,
-    overflow: 'hidden',
   },
   appName: {
     color: Colors.text,

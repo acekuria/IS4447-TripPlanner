@@ -2,6 +2,7 @@ import PrimaryButton from '@/components/ui/primary-button';
 import FormField from '@/components/ui/form-field';
 import ScreenHeader from '@/components/ui/screen-header';
 import { useAuth } from '@/contexts/auth';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -38,6 +39,13 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.logoRow}>
+            <Image
+              source={require('@/assets/images/logo.svg')}
+              style={styles.logo}
+              contentFit="contain"
+            />
+          </View>
           <ScreenHeader title="Create account" onBack={() => router.back()} />
 
           <View style={styles.card}>
@@ -77,7 +85,7 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F5F2',
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 10,
@@ -85,9 +93,17 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
+  logoRow: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logo: {
+    height: 64,
+    width: 64,
+  },
   card: {
     backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
+    borderColor: '#E8E6E1',
     borderRadius: 16,
     borderWidth: 1,
     padding: 24,
