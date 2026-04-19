@@ -53,7 +53,7 @@ const mockHabit: Habit = {
 
 describe('IndexScreen', () => {
   it('renders the habit, add button, and streak', () => {
-    const { getByText, getAllByText } = render(
+    const { getByText, getAllByText, getByLabelText } = render(
       <HabitContext.Provider value={{ habits: [mockHabit], setHabits: jest.fn() }}>
         <IndexScreen />
       </HabitContext.Provider>
@@ -61,9 +61,9 @@ describe('IndexScreen', () => {
 
     expect(getByText('Drink Water')).toBeTruthy();
     expect(getByText('Add Habit')).toBeTruthy();
-    expect(getByText('Mark as done today')).toBeTruthy();
-    // Streak renders as "3 days" via the InfoTag
-    expect(getByText('3 days')).toBeTruthy();
+    expect(getByLabelText('Mark as done today')).toBeTruthy();
+    // Streak chip renders as "🔥 3 days"
+    expect(getByText('🔥 3 days')).toBeTruthy();
     expect(getAllByText('Health').length).toBeGreaterThan(0);
   });
 });

@@ -1,7 +1,6 @@
-import { Colors } from '@/constants/theme';
+import { Colors, pastelTextColor } from '@/constants/theme';
 import { Habit, HabitContext } from '@/app/_layout';
-import InfoTag from '@/components/ui/info-tag';
-import PrimaryButton from '@/components/ui/primary-button';
+import { Ionicons } from '@expo/vector-icons';
 import { decrementHabitCount, getHabits, incrementHabitCount, markHabitDoneToday, unmarkHabitDoneToday } from '@/db/queries';
 import { useRouter } from 'expo-router';
 import { useContext } from 'react';
@@ -11,10 +10,18 @@ type Props = {
   habit: Habit;
 };
 
+function Chip({ label, color }: { label: string; color: string }) {
+  const textColor = pastelTextColor(color);
+  return (
+    <View style={[styles.chip, { backgroundColor: color }]}>
+      <Text style={[styles.chipText, { color: textColor }]}>{label}</Text>
+    </View>
+  );
+}
+
 export default function HabitCard({ habit }: Props) {
   const router = useRouter();
   const context = useContext(HabitContext);
-  const habitSummary = `${habit.name}, ${habit.categoryName}, ${habit.frequency}`;
 
   const openDetails = () =>
     router.push({ pathname: '/student/[id]', params: { id: habit.id.toString() } });
@@ -35,93 +42,80 @@ export default function HabitCard({ habit }: Props) {
     await refresh();
   };
 
-  const increment = async () => {
-    await incrementHabitCount(habit.id);
-    await refresh();
-  };
+  const increment = async () => { await incrementHabitCount(habit.id); await refresh(); };
+  const decrement = async () => { await decrementHabitCount(habit.id); await refresh(); };
 
-  const decrement = async () => {
-    await decrementHabitCount(habit.id);
-    await refresh();
-  };
+  const streakLabel = `${habit.currentStreak} ${habit.frequency === 'weekly' ? 'wk' : 'day'}${habit.currentStreak !== 1 ? 's' : ''}`;
 
   return (
     <View style={styles.card}>
-      <Pressable
-        onPress={openDetails}
-        accessibilityLabel={`${habitSummary}, view details`}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.content, pressed ? styles.cardPressed : null]}
-      >
-        <View>
-          <Text style={styles.name}>{habit.name}</Text>
-        </View>
+      {/* Top row: name + action button */}
+      <View style={styles.topRow}>
+        <Pressable
+          onPress={openDetails}
+          accessibilityLabel={`${habit.name}, view details`}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.nameArea, pressed && styles.pressed]}
+        >
+          <Text style={styles.name} numberOfLines={1}>{habit.name}</Text>
+        </Pressable>
 
-        <View style={styles.tags}>
-          <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
-          <InfoTag label="Frequency" value={habit.frequency} />
-          <InfoTag
-            label="Streak"
-            value={`${habit.currentStreak} ${habit.frequency === 'weekly' ? 'week' : 'day'}${habit.currentStreak !== 1 ? 's' : ''}`}
-          />
-        </View>
-
-        {habit.targetCount !== null && (
-          <View style={styles.weeklyProgress}>
-            <View style={styles.weeklyProgressRow}>
-              <Text style={styles.weeklyProgressText}>
-                {habit.targetProgress}/{habit.targetCount} this {habit.targetPeriod === 'weekly' ? 'week' : 'month'}
-              </Text>
-              {habit.targetMet ? (
-                <Text style={styles.targetMet}>Target met</Text>
-              ) : (
-                <Text style={styles.remaining}>
-                  {habit.targetCount - habit.targetProgress} remaining
-                </Text>
-              )}
-            </View>
-            <View style={styles.progressBarTrack}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  {
-                    width: `${Math.min((habit.targetProgress / habit.targetCount) * 100, 100)}%`,
-                    backgroundColor: Colors.teal,
-                  },
-                ]}
-              />
-            </View>
+        {habit.logType === 'count' ? (
+          <View style={styles.countControl}>
+            <Pressable onPress={() => { void decrement(); }} style={styles.countBtn} accessibilityLabel="Decrease count" accessibilityRole="button">
+              <Text style={styles.countBtnText}>−</Text>
+            </Pressable>
+            <Text style={styles.countValue}>{habit.todayCount}</Text>
+            <Pressable onPress={() => { void increment(); }} style={styles.countBtn} accessibilityLabel="Increase count" accessibilityRole="button">
+              <Text style={styles.countBtnText}>+</Text>
+            </Pressable>
           </View>
+        ) : (
+          <Pressable
+            onPress={() => { void toggleToday(); }}
+            accessibilityRole="button"
+            accessibilityLabel={habit.completedToday ? 'Unmark done today' : 'Mark as done today'}
+            style={[styles.checkBtn, habit.completedToday && styles.checkBtnDone]}
+          >
+            <Ionicons
+              name={habit.completedToday ? 'checkmark' : 'checkmark-outline'}
+              size={20}
+              color={habit.completedToday ? Colors.white : Colors.muted}
+            />
+          </Pressable>
         )}
-      </Pressable>
+      </View>
 
-      {habit.logType === 'count' ? (
-        <View style={styles.counter}>
-          <Pressable
-            onPress={() => { void decrement(); }}
-            accessibilityRole="button"
-            accessibilityLabel="Decrease count"
-            style={styles.counterButton}
-          >
-            <Text style={styles.counterButtonText}>−</Text>
-          </Pressable>
-          <Text style={styles.counterValue}>{habit.todayCount} today</Text>
-          <Pressable
-            onPress={() => { void increment(); }}
-            accessibilityRole="button"
-            accessibilityLabel="Increase count"
-            style={styles.counterButton}
-          >
-            <Text style={styles.counterButtonText}>+</Text>
-          </Pressable>
+      {/* Chips row */}
+      <View style={styles.chipsRow}>
+        <Chip label={habit.categoryName} color={habit.categoryColor} />
+        <Chip label={habit.frequency} color={Colors.tealLight} />
+        {habit.currentStreak > 0 && (
+          <Chip label={`🔥 ${streakLabel}`} color="#FEF3C7" />
+        )}
+      </View>
+
+      {/* Progress bar */}
+      {habit.targetCount !== null && (
+        <View style={styles.progressSection}>
+          <View style={styles.progressLabelRow}>
+            <Text style={styles.progressLabel}>
+              {habit.targetProgress}/{habit.targetCount} this {habit.targetPeriod === 'weekly' ? 'week' : 'month'}
+            </Text>
+            {habit.targetMet
+              ? <Text style={styles.targetMet}>✓ met</Text>
+              : <Text style={styles.remaining}>{habit.targetCount - habit.targetProgress} left</Text>
+            }
+          </View>
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${Math.min((habit.targetProgress / habit.targetCount) * 100, 100)}%` },
+              ]}
+            />
+          </View>
         </View>
-      ) : (
-        <PrimaryButton
-          compact
-          label={habit.completedToday ? 'Done today ✓' : 'Mark as done today'}
-          onPress={() => { void toggleToday(); }}
-          variant={habit.completedToday ? 'teal' : 'primary'}
-        />
       )}
     </View>
   );
@@ -133,80 +127,115 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: 14,
     borderWidth: 1,
-    marginBottom: 12,
-    padding: 14,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  content: {
-    borderRadius: 10,
+  topRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  nameArea: {
+    flex: 1,
+    marginRight: 10,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   name: {
-    color: '#111827',
-    fontSize: 18,
+    color: Colors.text,
+    fontSize: 16,
     fontWeight: '700',
   },
-  tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 10,
-  },
-  cardPressed: {
-    opacity: 0.88,
-  },
-  weeklyProgress: {
-    marginTop: 10,
-  },
-  weeklyProgressRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  weeklyProgressText: {
-    color: '#374151',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  targetMet: {
-    color: '#16A34A',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  remaining: {
-    color: '#6B7280',
-    fontSize: 13,
-  },
-  progressBarTrack: {
-    backgroundColor: Colors.border,
-    borderRadius: 999,
-    height: 8,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    borderRadius: 999,
-    height: 6,
-  },
-  counter: {
+  // Circular checkmark button
+  checkBtn: {
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  counterButton: {
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
+    borderColor: Colors.border,
+    borderRadius: 20,
+    borderWidth: 1.5,
     height: 40,
     justifyContent: 'center',
     width: 40,
   },
-  counterButtonText: {
-    color: '#0F172A',
-    fontSize: 22,
-    fontWeight: '500',
-    lineHeight: 26,
+  checkBtnDone: {
+    backgroundColor: Colors.teal,
+    borderColor: Colors.teal,
   },
-  counterValue: {
-    color: '#0F172A',
-    fontSize: 15,
+  // Count control (for count-type habits)
+  countControl: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  countBtn: {
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 8,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  countBtnText: {
+    color: Colors.text,
+    fontSize: 18,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
+  countValue: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    minWidth: 24,
+    textAlign: 'center',
+  },
+  // Chips
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  chip: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  chipText: {
+    fontSize: 11,
     fontWeight: '600',
+  },
+  // Progress
+  progressSection: {
+    marginTop: 10,
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  progressLabel: {
+    color: Colors.muted,
+    fontSize: 11,
+  },
+  targetMet: {
+    color: Colors.teal,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  remaining: {
+    color: Colors.muted,
+    fontSize: 11,
+  },
+  progressTrack: {
+    backgroundColor: Colors.border,
+    borderRadius: 999,
+    height: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    backgroundColor: Colors.teal,
+    borderRadius: 999,
+    height: 4,
   },
 });

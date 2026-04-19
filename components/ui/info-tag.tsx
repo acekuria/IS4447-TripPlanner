@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors, pastelTextColor } from '@/constants/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -7,49 +7,34 @@ type Props = {
   accentColor?: string;
 };
 
-function withAlpha(hex: string, alpha: string) {
-  return `${hex}${alpha}`;
-}
-
 export default function InfoTag({ label, value, accentColor }: Props) {
-  const accent = accentColor ?? null;
+  const bg = accentColor ?? Colors.tealLight;
+  const textColor = pastelTextColor(bg);
 
   return (
-    <View
-      style={[
-        styles.tag,
-        accent && {
-          backgroundColor: withAlpha(accent, '2E'),
-          borderColor: withAlpha(accent, 'A6'),
-        },
-      ]}
-    >
-      <Text style={[styles.label, accent && { color: accent }]}>{label}</Text>
-      <Text style={[styles.value, accent && { color: Colors.text }]}>{value}</Text>
+    <View style={[styles.tag, { backgroundColor: bg }]}>
+      <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+      <Text style={[styles.value, { color: textColor }]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   tag: {
-    backgroundColor: Colors.tealLight,
-    borderColor: 'transparent',
     borderRadius: 999,
-    borderWidth: 1,
     flexDirection: 'row',
+    marginBottom: 6,
     marginRight: 8,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
   },
   label: {
-    color: Colors.tealDark,
     fontSize: 12,
     fontWeight: '700',
     marginRight: 4,
   },
   value: {
-    color: Colors.teal,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

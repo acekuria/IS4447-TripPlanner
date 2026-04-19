@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { db } from './client';
 import { categories, habitLogs, habits, targets } from './schema';
 
@@ -24,9 +24,9 @@ function buildDates(
 // ─── categories ──────────────────────────────────────────────────────────────
 
 const defaultCategories = [
-  { id: 1, name: 'Health', color: '#22C55E' },
-  { id: 2, name: 'Learning', color: '#3B82F6' },
-  { id: 3, name: 'Productivity', color: '#F59E0B' },
+  { id: 1, name: 'Health', color: '#C8F7DC' },
+  { id: 2, name: 'Learning', color: '#C4DEF6' },
+  { id: 3, name: 'Productivity', color: '#FFD9C4' },
 ];
 
 // ─── habits ──────────────────────────────────────────────────────────────────

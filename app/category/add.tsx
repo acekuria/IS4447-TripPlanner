@@ -7,11 +7,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const PRESET_COLORS = [
-  '#22C55E', '#3B82F6', '#F59E0B', '#EF4444',
-  '#8B5CF6', '#EC4899', '#F97316', '#14B8A6',
-  '#6366F1', '#64748B', '#0EA5E9', '#84CC16',
-];
+import { PASTEL_BG_LIST } from '@/constants/theme';
+const PRESET_COLORS = PASTEL_BG_LIST;
 
 export default function AddCategory() {
   const router = useRouter();
