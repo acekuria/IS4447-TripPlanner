@@ -82,22 +82,24 @@ export default function InsightsScreen() {
         {/* ── Category breakdown ── */}
         <SectionTitle>Category breakdown — last 28 days</SectionTitle>
         <View style={styles.breakdownCard}>
-          {data.categoryBreakdown.map((cat) => {
-            const pct = cat.possible > 0 ? Math.min(cat.completed / cat.possible, 1) : 0;
-            const label = Math.round(pct * 100);
-            return (
-              <View key={cat.name} style={styles.catRow}>
-                <View style={styles.catLabelRow}>
-                  <View style={[styles.catDot, { backgroundColor: cat.color }]} />
-                  <Text style={styles.catName}>{cat.name}</Text>
-                  <Text style={styles.catPct}>{label}%</Text>
+          {(() => {
+            const totalCompleted = data.categoryBreakdown.reduce((s, c) => s + c.completed, 0);
+            return data.categoryBreakdown.map((cat) => {
+              const pct = totalCompleted > 0 ? Math.round((cat.completed / totalCompleted) * 100) : 0;
+              return (
+                <View key={cat.name} style={styles.catRow}>
+                  <View style={styles.catLabelRow}>
+                    <View style={[styles.catDot, { backgroundColor: cat.color }]} />
+                    <Text style={styles.catName}>{cat.name}</Text>
+                    <Text style={styles.catPct}>{pct}%</Text>
+                  </View>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, { width: `${pct}%` as any, backgroundColor: cat.color }]} />
+                  </View>
                 </View>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${label}%` as any, backgroundColor: cat.color }]} />
-                </View>
-              </View>
-            );
-          })}
+              );
+            });
+          })()}
         </View>
 
         {/* ── Top streaks ── */}
@@ -270,12 +272,12 @@ const styles = StyleSheet.create({
   progressTrack: {
     backgroundColor: '#F1F5F9',
     borderRadius: 999,
-    height: 8,
+    height: 12,
     overflow: 'hidden',
   },
   progressFill: {
     borderRadius: 999,
-    height: 8,
+    height: 12,
   },
   streakRow: {
     alignItems: 'center',
