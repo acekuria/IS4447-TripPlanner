@@ -80,7 +80,7 @@ describe('IndexScreen — habit list filters', () => {
 
   it('filters habits by search query', () => {
     const { getByPlaceholderText, getByText, queryByText } = renderWithContext(mockHabits);
-    fireEvent.changeText(getByPlaceholderText('Search by habit or category'), 'run');
+    fireEvent.changeText(getByPlaceholderText('Search habits…'), 'run');
     expect(getByText('Morning Run')).toBeTruthy();
     expect(queryByText('Read')).toBeNull();
     expect(queryByText('Plan Week')).toBeNull();
@@ -88,15 +88,19 @@ describe('IndexScreen — habit list filters', () => {
 
   it('filters habits by category name in search', () => {
     const { getByPlaceholderText, getByText, queryByText } = renderWithContext(mockHabits);
-    fireEvent.changeText(getByPlaceholderText('Search by habit or category'), 'learning');
+    fireEvent.changeText(getByPlaceholderText('Search habits…'), 'learning');
     expect(getByText('Read')).toBeTruthy();
     expect(queryByText('Morning Run')).toBeNull();
   });
 
-  it('filters habits by frequency', () => {
-    const { getAllByText, getByText, queryByText } = renderWithContext(mockHabits);
-    // 'weekly' appears in both the filter pill and habit frequency tags — press the first one
-    fireEvent.press(getAllByText('weekly')[0]);
+  it('filters habits by frequency via filter sheet', () => {
+    const { getByLabelText, getByText, queryByText } = renderWithContext(mockHabits);
+    // Open the filter bottom sheet
+    fireEvent.press(getByLabelText('Open filters'));
+    // Press the weekly chip inside the sheet
+    fireEvent.press(getByLabelText('Filter weekly'));
+    // Close sheet
+    fireEvent.press(getByText('Done'));
     expect(getByText('Plan Week')).toBeTruthy();
     expect(queryByText('Morning Run')).toBeNull();
     expect(queryByText('Read')).toBeNull();
@@ -104,7 +108,7 @@ describe('IndexScreen — habit list filters', () => {
 
   it('shows empty state message when no habits match', () => {
     const { getByPlaceholderText, getByText } = renderWithContext(mockHabits);
-    fireEvent.changeText(getByPlaceholderText('Search by habit or category'), 'zzznomatch');
+    fireEvent.changeText(getByPlaceholderText('Search habits…'), 'zzznomatch');
     expect(getByText('No matches')).toBeTruthy();
   });
 });
