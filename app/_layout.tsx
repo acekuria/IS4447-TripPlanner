@@ -28,9 +28,10 @@ function AppNavigator() {
   useEffect(() => {
     if (isLoading) return;
     const inTabsGroup = segments[0] === '(tabs)';
+    const inAuthScreen = segments[0] === 'login' || segments[0] === 'register';
     if (!user && inTabsGroup) {
       router.replace('/login' as never);
-    } else if (user && !inTabsGroup) {
+    } else if (user && inAuthScreen) {
       router.replace('/(tabs)' as never);
     }
   }, [user, isLoading, segments]);

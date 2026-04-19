@@ -5,7 +5,7 @@ import { sqlite } from '@/db/client';
 import { getHabitProgress, getHabits, markHabitDoneToday, type HabitProgress, unmarkHabitDoneToday } from '@/db/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Habit, HabitContext } from '../_layout';
 
@@ -48,11 +48,21 @@ export default function HabitDetail() {
     setProgress(next);
   };
 
-  const deleteHabit = async () => {
-    sqlite.execSync(`DELETE FROM habits WHERE id = ${Number(id)}`);
-    const rows = await getHabits();
-    setHabits(rows);
-    router.back();
+  const deleteHabit = () => {
+    Alert.alert('Delete habit', `Delete "${habit.name}"? This cannot be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          router.back();
+          sqlite.execSync(`DELETE FROM habit_logs WHERE habit_id = ${Number(id)}`);
+          sqlite.execSync(`DELETE FROM targets WHERE habit_id = ${Number(id)}`);
+          sqlite.execSync(`DELETE FROM habits WHERE id = ${Number(id)}`);
+          void getHabits().then(setHabits);
+        },
+      },
+    ]);
   };
 
   const toggleToday = async () => {
