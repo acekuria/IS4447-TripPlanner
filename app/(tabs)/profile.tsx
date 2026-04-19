@@ -1,6 +1,7 @@
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { useAuth } from '@/contexts/auth';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +37,13 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerRow}>
+        <Image
+          source={require('@/assets/images/logo.svg')}
+          style={styles.headerLogo}
+          contentFit="contain"
+        />
+      </View>
       <ScreenHeader title="Profile" />
 
       <View style={styles.avatarRow}>
@@ -88,6 +96,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 10,
+  },
+  headerRow: {
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  headerLogo: {
+    height: 28,
+    width: 120,
   },
   avatarRow: {
     alignItems: 'center',

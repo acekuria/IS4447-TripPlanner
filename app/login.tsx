@@ -45,7 +45,6 @@ export default function LoginScreen() {
               style={styles.logo}
               contentFit="contain"
             />
-            <Text style={styles.appName}>HabitTracker</Text>
             <Text style={styles.tagline}>Build better habits, one day at a time.</Text>
           </View>
 
@@ -99,15 +98,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logo: {
-    height: 90,
-    width: 90,
-    marginBottom: 14,
-  },
-  appName: {
-    color: Colors.text,
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    height: 56,
+    width: 200,
+    marginBottom: 12,
   },
   tagline: {
     color: Colors.muted,

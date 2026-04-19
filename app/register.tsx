@@ -95,11 +95,12 @@ const styles = StyleSheet.create({
   },
   logoRow: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    marginTop: 8,
   },
   logo: {
-    height: 64,
-    width: 64,
+    height: 56,
+    width: 200,
   },
   card: {
     backgroundColor: '#FFFFFF',
