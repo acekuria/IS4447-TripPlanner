@@ -1,29 +1,110 @@
-export const Colors = {
-  // Primary — coral/orange (buttons, CTAs, active tabs)
+export interface ThemeColors {
+  // Brand (same in both modes)
+  primary: string;
+  primaryPressed: string;
+  primaryLight: string;
+  primaryBorder: string;
+  teal: string;
+  tealLight: string;
+  tealDark: string;
+  danger: string;
+  dangerLight: string;
+
+  // Surfaces
+  bg: string;
+  card: string;
+
+  // Borders & dividers
+  border: string;
+  inputBorder: string;
+  divider: string;
+
+  // Text
+  text: string;
+  textStrong: string;
+  textMuted: string;
+  textLabel: string;
+  textSubdued: string;
+
+  // Inputs
+  inputBg: string;
+
+  // UI accents
+  avatarBg: string;
+  selectedBg: string;
+  selectedText: string;
+  tabBar: string;
+  swatchBorder: string;
+}
+
+export const LightTheme: ThemeColors = {
   primary: '#F47B4F',
   primaryPressed: '#D85A30',
   primaryLight: '#FFF0EB',
   primaryBorder: '#FFD0BF',
-
-  // Accent — teal (streaks, progress, success, "Done today")
   teal: '#1D9E75',
   tealLight: '#E1F5EE',
   tealDark: '#085041',
-
-  // Neutrals
-  white: '#FFFFFF',
-  surface: '#F7F5F2',
-  border: '#E8E6E1',
-  muted: '#888780',
-  text: '#2C2C2A',
-
-  // Semantic
   danger: '#B91C1C',
   dangerLight: '#FEE2E2',
+
+  bg: '#F7F5F2',
+  card: '#FFFFFF',
+  border: '#E8E6E1',
+  inputBorder: '#CBD5E1',
+  divider: '#F1F5F9',
+
+  text: '#2C2C2A',
+  textStrong: '#111827',
+  textMuted: '#888780',
+  textLabel: '#374151',
+  textSubdued: '#6B7280',
+
+  inputBg: '#FFFFFF',
+
+  avatarBg: '#0F172A',
+  selectedBg: '#0F172A',
+  selectedText: '#FFFFFF',
+  tabBar: '#FFFFFF',
+  swatchBorder: '#0F172A',
 };
 
-// Pastel chip colours for categories — bg is stored in the database and used for chip backgrounds.
-// midtone is derived at render time for dots, bars, and swatches that need more visual contrast.
+export const DarkTheme: ThemeColors = {
+  primary: '#F47B4F',
+  primaryPressed: '#D85A30',
+  primaryLight: '#3D1F10',
+  primaryBorder: '#5A2E1A',
+  teal: '#1D9E75',
+  tealLight: '#0D3326',
+  tealDark: '#6EE7B7',
+  danger: '#EF4444',
+  dangerLight: '#450A0A',
+
+  bg: '#0F0F0F',
+  card: '#1C1C1C',
+  border: '#2D2D2D',
+  inputBorder: '#3A3A3A',
+  divider: '#262626',
+
+  text: '#F1F0EE',
+  textStrong: '#F9FAFB',
+  textMuted: '#9CA3AF',
+  textLabel: '#D1D5DB',
+  textSubdued: '#9CA3AF',
+
+  inputBg: '#222222',
+
+  avatarBg: '#1D9E75',
+  selectedBg: '#F1F5F9',
+  selectedText: '#0F172A',
+  tabBar: '#1C1C1C',
+  swatchBorder: '#FFFFFF',
+};
+
+// Keep Colors as alias for LightTheme for any legacy usage
+export const Colors = LightTheme;
+
+// Pastel chip colours for categories
 export const CategoryPastels = [
   { bg: '#C8F7DC', text: '#1A5C3A', midtone: '#5DCAA5' }, // mint green   — Health
   { bg: '#C4DEF6', text: '#1B4F8A', midtone: '#85B7EB' }, // sky blue     — Learning
@@ -43,10 +124,9 @@ export const PASTEL_BG_LIST = CategoryPastels.map((p) => p.bg);
 
 export function pastelTextColor(bg: string): string {
   const match = CategoryPastels.find((p) => p.bg.toLowerCase() === bg.toLowerCase());
-  return match ? match.text : Colors.text;
+  return match ? match.text : LightTheme.text;
 }
 
-/** Returns the stronger mid-tone colour for a category given its pastel bg. */
 export function midtoneColor(bg: string): string {
   const match = CategoryPastels.find((p) => p.bg.toLowerCase() === bg.toLowerCase());
   return match ? match.midtone : bg;

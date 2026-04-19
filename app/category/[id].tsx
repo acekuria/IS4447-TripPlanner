@@ -2,6 +2,7 @@ import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { midtoneColor, PASTEL_BG_LIST } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { getCategories, updateCategory } from '@/db/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -13,10 +14,10 @@ const PRESET_COLORS = PASTEL_BG_LIST;
 export default function EditCategory() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [color, setColor] = useState(PRESET_COLORS[0]);
 
-  // load the existing category values to pre-fill the form
   useEffect(() => {
     const load = async () => {
       const cats = await getCategories();
@@ -34,6 +35,29 @@ export default function EditCategory() {
     await updateCategory(Number(id), name.trim(), color);
     router.back();
   };
+
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, padding: 20 },
+    content: { paddingBottom: 32 },
+    label: { color: colors.textLabel, fontSize: 13, fontWeight: '600', marginBottom: 10, marginTop: 4 },
+    colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
+    colorSwatch: { borderRadius: 999, height: 40, width: 40 },
+    colorSwatchSelected: { borderColor: colors.swatchBorder, borderWidth: 3 },
+    preview: {
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 20,
+      padding: 14,
+    },
+    previewSwatch: { borderRadius: 999, height: 32, width: 32 },
+    previewName: { color: colors.textStrong, fontSize: 16, fontWeight: '600' },
+    cancel: { marginTop: 10 },
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -71,60 +95,3 @@ export default function EditCategory() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F8FAFC',
-    flex: 1,
-    padding: 20,
-  },
-  content: {
-    paddingBottom: 32,
-  },
-  label: {
-    color: '#334155',
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 10,
-    marginTop: 4,
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 20,
-  },
-  colorSwatch: {
-    borderRadius: 999,
-    height: 40,
-    width: 40,
-  },
-  colorSwatchSelected: {
-    borderColor: '#0F172A',
-    borderWidth: 3,
-  },
-  preview: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-    padding: 14,
-  },
-  previewSwatch: {
-    borderRadius: 999,
-    height: 32,
-    width: 32,
-  },
-  previewName: {
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cancel: {
-    marginTop: 10,
-  },
-});

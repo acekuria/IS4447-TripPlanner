@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -7,8 +7,18 @@ type Props = {
   onBack?: () => void;
 };
 
-// shows the page title, optional subtitle, and an optional back button
 export default function ScreenHeader({ title, subtitle, onBack }: Props) {
+  const { colors } = useTheme();
+  const styles = StyleSheet.create({
+    container: { marginBottom: 16 },
+    backButton: { alignItems: 'center', flexDirection: 'row', marginBottom: 12 },
+    backButtonPressed: { opacity: 0.6 },
+    backArrow: { color: colors.primary, fontSize: 18, marginRight: 4 },
+    backLabel: { color: colors.primary, fontSize: 15, fontWeight: '600' },
+    title: { color: colors.text, fontSize: 28, fontWeight: '700' },
+    subtitle: { color: colors.textMuted, fontSize: 14, marginTop: 4 },
+  });
+
   return (
     <View style={styles.container}>
       {onBack ? (
@@ -27,37 +37,3 @@ export default function ScreenHeader({ title, subtitle, onBack }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  backButton: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  backButtonPressed: {
-    opacity: 0.6,
-  },
-  backArrow: {
-    color: Colors.primary,
-    fontSize: 18,
-    marginRight: 4,
-  },
-  backLabel: {
-    color: Colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: Colors.muted,
-    fontSize: 14,
-    marginTop: 4,
-  },
-});

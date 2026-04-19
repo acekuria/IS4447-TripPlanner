@@ -1,6 +1,7 @@
 import EmptyState from '@/components/ui/empty-state';
 import ScreenHeader from '@/components/ui/screen-header';
 import { midtoneColor } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { getInsightsData, InsightsData } from '@/db/queries';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
@@ -8,6 +9,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function InsightsScreen() {
+  const { colors } = useTheme();
   const [data, setData] = useState<InsightsData | null>(null);
 
   useFocusEffect(
@@ -16,12 +18,92 @@ export default function InsightsScreen() {
     }, [])
   );
 
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 18, paddingTop: 10 },
+    content: { paddingBottom: 32 },
+    centered: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+    statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20, marginTop: 4 },
+    statCard: {
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      flex: 1,
+      paddingVertical: 14,
+    },
+    statValue: { color: colors.textStrong, fontSize: 22, fontWeight: '700' },
+    statLabel: { color: colors.textSubdued, fontSize: 12, marginTop: 2 },
+    sectionTitle: {
+      color: colors.textLabel,
+      fontSize: 13,
+      fontWeight: '600',
+      letterSpacing: 0.3,
+      marginBottom: 10,
+      textTransform: 'uppercase',
+    },
+    chartCard: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 20,
+      padding: 16,
+    },
+    barsContainer: { flexDirection: 'row', height: 140, alignItems: 'flex-end', gap: 6 },
+    barWrapper: { alignItems: 'center', flex: 1 },
+    barValue: { color: colors.textLabel, fontSize: 11, fontWeight: '600', marginBottom: 4, height: 16 },
+    barTrack: {
+      borderRadius: 4,
+      height: 100,
+      overflow: 'hidden',
+      width: '100%',
+      flexDirection: 'column',
+      justifyContent: 'flex-end',
+    },
+    barFill: { borderRadius: 4, width: '100%' },
+    barLabel: { color: colors.textMuted, fontSize: 10, marginTop: 6 },
+    barLabelToday: { color: colors.primary, fontWeight: '600' },
+    breakdownCard: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 20,
+      padding: 16,
+    },
+    catRow: { marginBottom: 14 },
+    catLabelRow: { alignItems: 'center', flexDirection: 'row', marginBottom: 6 },
+    catDot: { borderRadius: 999, height: 10, width: 10, marginRight: 8 },
+    catName: { color: colors.textStrong, flex: 1, fontSize: 14, fontWeight: '500' },
+    catPct: { color: colors.textSubdued, fontSize: 13, fontWeight: '600' },
+    progressTrack: { backgroundColor: colors.divider, borderRadius: 999, height: 12, overflow: 'hidden' },
+    progressFill: { borderRadius: 999, height: 12 },
+    streakRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 },
+    streakRowBorder: { borderBottomColor: colors.divider, borderBottomWidth: 1 },
+    streakLeft: { alignItems: 'center', flexDirection: 'row', gap: 8, flex: 1 },
+    streakRank: { color: colors.textMuted, fontSize: 13, fontWeight: '600', width: 28 },
+    streakName: { color: colors.textStrong, fontSize: 14, fontWeight: '500', flex: 1 },
+    streakBadge: {
+      alignItems: 'center',
+      backgroundColor: colors.tealLight,
+      borderRadius: 8,
+      flexDirection: 'row',
+      gap: 3,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    streakValue: { color: colors.tealDark, fontSize: 14, fontWeight: '700' },
+    streakUnit: { color: colors.teal, fontSize: 11 },
+    empty: { color: colors.textMuted, fontSize: 14, paddingVertical: 8, textAlign: 'center' },
+  });
+
   if (!data) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScreenHeader title="Insights" />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#0F766E" />
+          <ActivityIndicator size="large" color={colors.teal} />
         </View>
       </SafeAreaView>
     );
@@ -47,15 +129,13 @@ export default function InsightsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Insights" />
 
-        {/* ── Summary cards ── */}
         <View style={styles.statsRow}>
-          <StatCard label="Habits" value={String(data.totalHabits)} />
-          <StatCard label="This week" value={`${data.weeklyCompletionRate}%`} accent="#22C55E" />
-          <StatCard label="Best streak" value={String(data.bestStreak)} accent="#3B82F6" />
+          <StatCard label="Habits" value={String(data.totalHabits)} styles={styles} />
+          <StatCard label="This week" value={`${data.weeklyCompletionRate}%`} accent="#22C55E" styles={styles} />
+          <StatCard label="Best streak" value={String(data.bestStreak)} accent="#3B82F6" styles={styles} />
         </View>
 
-        {/* ── Daily bar chart ── */}
-        <SectionTitle>Daily completions — last 7 days</SectionTitle>
+        <Text style={styles.sectionTitle}>Daily completions — last 7 days</Text>
         <View style={styles.chartCard}>
           <View style={styles.barsContainer}>
             {data.dailyTotals.map((day) => {
@@ -67,7 +147,7 @@ export default function InsightsScreen() {
                     <View
                       style={[
                         styles.barFill,
-                        { height: heightPx, backgroundColor: day.label === 'Today' ? '#F47B4F' : '#1D9E75' },
+                        { height: heightPx, backgroundColor: day.label === 'Today' ? colors.primary : colors.teal },
                       ]}
                     />
                   </View>
@@ -80,11 +160,9 @@ export default function InsightsScreen() {
           </View>
         </View>
 
-        {/* ── Category breakdown ── */}
-        <SectionTitle>Category breakdown — last 28 days</SectionTitle>
+        <Text style={styles.sectionTitle}>Category breakdown — last 28 days</Text>
         <View style={styles.breakdownCard}>
           {(() => {
-            // divide each category's logs by the total so the bars show share of activity, not a rate
             const totalCompleted = data.categoryBreakdown.reduce((s, c) => s + c.completed, 0);
             return data.categoryBreakdown.map((cat) => {
               const pct = totalCompleted > 0 ? Math.round((cat.completed / totalCompleted) * 100) : 0;
@@ -105,8 +183,7 @@ export default function InsightsScreen() {
           })()}
         </View>
 
-        {/* ── Top streaks ── */}
-        <SectionTitle>Top streaks</SectionTitle>
+        <Text style={styles.sectionTitle}>Top streaks</Text>
         <View style={styles.breakdownCard}>
           {data.topStreaks.map((item, i) => (
             <View key={item.name} style={[styles.streakRow, i < data.topStreaks.length - 1 && styles.streakRowBorder]}>
@@ -132,7 +209,7 @@ export default function InsightsScreen() {
   );
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function StatCard({ label, value, accent, styles }: { label: string; value: string; accent?: string; styles: any }) {
   return (
     <View style={styles.statCard}>
       <Text style={[styles.statValue, accent ? { color: accent } : undefined]}>{value}</Text>
@@ -140,198 +217,3 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
     </View>
   );
 }
-
-function SectionTitle({ children }: { children: string }) {
-  return <Text style={styles.sectionTitle}>{children}</Text>;
-}
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F7F5F2',
-    flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-  },
-  content: {
-    paddingBottom: 32,
-  },
-  centered: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
-    marginTop: 4,
-  },
-  statCard: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    borderWidth: 1,
-    flex: 1,
-    paddingVertical: 14,
-  },
-  statValue: {
-    color: '#111827',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  statLabel: {
-    color: '#6B7280',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  sectionTitle: {
-    color: '#374151',
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    marginBottom: 10,
-    textTransform: 'uppercase',
-  },
-  chartCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 20,
-    padding: 16,
-  },
-  barsContainer: {
-    flexDirection: 'row',
-    height: 140,
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  barWrapper: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  barValue: {
-    color: '#374151',
-    fontSize: 11,
-    fontWeight: '600',
-    marginBottom: 4,
-    height: 16,
-  },
-  barTrack: {
-    borderRadius: 4,
-    height: 100,
-    overflow: 'hidden',
-    width: '100%',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-  },
-  barFill: {
-    borderRadius: 4,
-    width: '100%',
-  },
-  barLabel: {
-    color: '#9CA3AF',
-    fontSize: 10,
-    marginTop: 6,
-  },
-  barLabelToday: {
-    color: '#F47B4F',
-    fontWeight: '600',
-  },
-  breakdownCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 20,
-    padding: 16,
-  },
-  catRow: {
-    marginBottom: 14,
-  },
-  catLabelRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  catDot: {
-    borderRadius: 999,
-    height: 10,
-    width: 10,
-    marginRight: 8,
-  },
-  catName: {
-    color: '#111827',
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  catPct: {
-    color: '#6B7280',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  progressTrack: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 999,
-    height: 12,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    borderRadius: 999,
-    height: 12,
-  },
-  streakRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  streakRowBorder: {
-    borderBottomColor: '#F1F5F9',
-    borderBottomWidth: 1,
-  },
-  streakLeft: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    flex: 1,
-  },
-  streakRank: {
-    color: '#94A3B8',
-    fontSize: 13,
-    fontWeight: '600',
-    width: 28,
-  },
-  streakName: {
-    color: '#111827',
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
-  },
-  streakBadge: {
-    alignItems: 'center',
-    backgroundColor: '#E1F5EE',
-    borderRadius: 8,
-    flexDirection: 'row',
-    gap: 3,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  streakValue: {
-    color: '#085041',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  streakUnit: {
-    color: '#1D9E75',
-    fontSize: 11,
-  },
-  empty: {
-    color: '#94A3B8',
-    fontSize: 14,
-    paddingVertical: 8,
-    textAlign: 'center',
-  },
-});

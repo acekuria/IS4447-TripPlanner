@@ -2,6 +2,7 @@ import PrimaryButton from '@/components/ui/primary-button';
 import FormField from '@/components/ui/form-field';
 import ScreenHeader from '@/components/ui/screen-header';
 import { useAuth } from '@/contexts/auth';
+import { useTheme } from '@/contexts/theme';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -11,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function RegisterScreen() {
   const { register } = useAuth();
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +21,6 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    // validate all fields locally before touching the database
     setError('');
     if (!name.trim()) { setError('Please enter your name.'); return; }
     if (!email.trim()) { setError('Please enter your email.'); return; }
@@ -33,6 +34,22 @@ export default function RegisterScreen() {
     if (!result.success) setError(result.error ?? 'Registration failed.');
   };
 
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 24, paddingTop: 10 },
+    content: { paddingBottom: 32 },
+    logoRow: { alignItems: 'center', marginBottom: 16, marginTop: 8 },
+    logo: { height: 56, width: 200 },
+    card: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      padding: 24,
+      marginTop: 8,
+    },
+    error: { color: colors.danger, fontSize: 13, marginBottom: 12 },
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -42,7 +59,7 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.logoRow}>
             <Image
-              source={require('@/assets/images/logo.svg')}
+              source={isDark ? require('@/assets/images/logo-dark.svg') : require('@/assets/images/logo.svg')}
               style={styles.logo}
               contentFit="contain"
             />
@@ -83,37 +100,3 @@ export default function RegisterScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F7F5F2',
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 10,
-  },
-  content: {
-    paddingBottom: 32,
-  },
-  logoRow: {
-    alignItems: 'center',
-    marginBottom: 16,
-    marginTop: 8,
-  },
-  logo: {
-    height: 56,
-    width: 200,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E8E6E1',
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 24,
-    marginTop: 8,
-  },
-  error: {
-    color: '#B91C1C',
-    fontSize: 13,
-    marginBottom: 12,
-  },
-});

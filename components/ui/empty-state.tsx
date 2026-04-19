@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from './primary-button';
@@ -11,12 +11,28 @@ type Props = {
   onAction?: () => void;
 };
 
-// reusable placeholder shown when a list has no items to display
 export default function EmptyState({ icon, title, subtitle, actionLabel, onAction }: Props) {
+  const { colors } = useTheme();
+  const styles = StyleSheet.create({
+    container: { alignItems: 'center', paddingTop: 48, paddingHorizontal: 24 },
+    iconWrap: {
+      alignItems: 'center',
+      backgroundColor: colors.bg,
+      borderRadius: 999,
+      height: 72,
+      justifyContent: 'center',
+      marginBottom: 16,
+      width: 72,
+    },
+    title: { color: colors.text, fontSize: 17, fontWeight: '600', textAlign: 'center' },
+    subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 20, marginTop: 6, textAlign: 'center' },
+    action: { marginTop: 20 },
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={36} color={Colors.muted} />
+        <Ionicons name={icon} size={36} color={colors.textMuted} />
       </View>
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -28,36 +44,3 @@ export default function EmptyState({ icon, title, subtitle, actionLabel, onActio
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    paddingTop: 48,
-    paddingHorizontal: 24,
-  },
-  iconWrap: {
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 999,
-    height: 72,
-    justifyContent: 'center',
-    marginBottom: 16,
-    width: 72,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 17,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: Colors.muted,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  action: {
-    marginTop: 20,
-  },
-});

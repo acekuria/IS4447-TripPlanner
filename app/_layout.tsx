@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from '@/contexts/auth';
+import { ThemeProvider } from '@/contexts/theme';
 import { getHabits, HabitRecord } from '@/db/queries';
 import { seedHabitsIfEmpty } from '@/db/seed';
 import { useRouter, useSegments, Stack } from 'expo-router';
@@ -60,8 +61,10 @@ function AppNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

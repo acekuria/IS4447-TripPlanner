@@ -2,6 +2,7 @@ import EmptyState from '@/components/ui/empty-state';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { midtoneColor } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { deleteCategory, getCategoriesWithCount } from '@/db/queries';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -18,8 +19,8 @@ type CategoryWithCount = {
 
 export default function CategoriesScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
-  // habitCount is fetched alongside each category so we can block deletion of categories still in use
 
   const load = useCallback(async () => {
     const rows = await getCategoriesWithCount();
@@ -48,6 +49,31 @@ export default function CategoriesScreen() {
       },
     ]);
   };
+
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 18, paddingTop: 10 },
+    list: { paddingTop: 14, paddingBottom: 24 },
+    card: {
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+      padding: 14,
+    },
+    left: { alignItems: 'center', flexDirection: 'row', gap: 12 },
+    swatch: { borderRadius: 999, height: 36, width: 36 },
+    name: { color: colors.textStrong, fontSize: 16, fontWeight: '600' },
+    count: { color: colors.textSubdued, fontSize: 13, marginTop: 2 },
+    actions: { flexDirection: 'row', gap: 16 },
+    actionButton: { padding: 4 },
+    editText: { color: colors.teal, fontSize: 14, fontWeight: '600' },
+    deleteText: { color: colors.danger, fontSize: 14, fontWeight: '600' },
+    deleteDisabled: { color: colors.border },
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -101,67 +127,3 @@ export default function CategoriesScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F7F5F2',
-    flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-  },
-  list: {
-    paddingTop: 14,
-    paddingBottom: 24,
-  },
-  card: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    borderWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    padding: 14,
-  },
-  left: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 12,
-  },
-  swatch: {
-    borderRadius: 999,
-    height: 36,
-    width: 36,
-  },
-  name: {
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  count: {
-    color: '#6B7280',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  actionButton: {
-    padding: 4,
-  },
-  editText: {
-    color: '#0F766E',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteText: {
-    color: '#B91C1C',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteDisabled: {
-    color: '#CBD5E1',
-  },
-});

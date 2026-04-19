@@ -1,6 +1,7 @@
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { useTheme } from '@/contexts/theme';
 import { db } from '@/db/client';
 import { getCategories, getHabits, setHabitTarget } from '@/db/queries';
 import { habits as habitsTable } from '@/db/schema';
@@ -17,6 +18,7 @@ const periodOptions = ['weekly', 'monthly'] as const;
 export default function AddHabit() {
   const router = useRouter();
   const context = useContext(HabitContext);
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -30,11 +32,8 @@ export default function AddHabit() {
     const loadCategories = async () => {
       const rows = await getCategories();
       setCategories(rows);
-      if (rows.length > 0) {
-        setSelectedCategoryId(rows[0].id);
-      }
+      if (rows.length > 0) setSelectedCategoryId(rows[0].id);
     };
-
     void loadCategories();
   }, []);
 
@@ -43,17 +42,13 @@ export default function AddHabit() {
   const { setHabits } = context;
 
   const saveHabit = async () => {
-    if (!name.trim() || selectedCategoryId === null) {
-      return;
-    }
+    if (!name.trim() || selectedCategoryId === null) return;
 
-    // .returning() gives us back the new row's id so we can attach a target to it
     const [inserted] = await db
       .insert(habitsTable)
       .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, notes: notes.trim() || null, count: 0 })
       .returning({ id: habitsTable.id });
 
-    // goal is optional — skip if the user left the field blank or entered 0
     const parsedTarget = parseInt(goalTarget, 10);
     if (!isNaN(parsedTarget) && parsedTarget > 0) {
       await setHabitTarget(inserted.id, parsedTarget, goalPeriod);
@@ -63,6 +58,41 @@ export default function AddHabit() {
     setHabits(rows);
     router.back();
   };
+
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, padding: 20 },
+    form: { marginBottom: 6 },
+    label: { color: colors.textLabel, fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 4 },
+    optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+    optionButton: {
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 10,
+      borderWidth: 1,
+      flexDirection: 'row',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    categoryOptionSelected: { borderColor: 'transparent' },
+    frequencyOptionSelected: { backgroundColor: colors.selectedBg, borderColor: colors.selectedBg },
+    optionButtonText: { color: colors.text, fontSize: 14, fontWeight: '500' },
+    optionButtonTextSelected: { color: colors.selectedText },
+    colorSwatch: { borderRadius: 999, height: 10, marginRight: 8, width: 10 },
+    backButton: { marginTop: 10 },
+    content: {},
+    input: {
+      backgroundColor: colors.inputBg,
+      borderColor: colors.inputBorder,
+      borderRadius: 10,
+      borderWidth: 1,
+      color: colors.text,
+      fontSize: 15,
+      marginBottom: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -161,6 +191,7 @@ export default function AddHabit() {
             accessibilityLabel="Goal target, enter number"
             keyboardType="numeric"
             placeholder="Times per period (e.g. 5)"
+            placeholderTextColor={colors.textMuted}
             value={goalTarget}
             onChangeText={setGoalTarget}
             style={styles.input}
@@ -174,71 +205,3 @@ export default function AddHabit() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F8FAFC',
-    flex: 1,
-    padding: 20,
-  },
-  form: {
-    marginBottom: 6,
-  },
-  label: {
-    color: '#334155',
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 6,
-    marginTop: 4,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  optionButton: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    borderWidth: 1,
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  categoryOptionSelected: {
-    borderColor: 'transparent',
-  },
-  frequencyOptionSelected: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-  },
-  optionButtonText: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  optionButtonTextSelected: {
-    color: '#FFFFFF',
-  },
-  colorSwatch: {
-    borderRadius: 999,
-    height: 10,
-    marginRight: 8,
-    width: 10,
-  },
-  backButton: {
-    marginTop: 10,
-  },
-  content: {},
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    borderWidth: 1,
-    fontSize: 15,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-});

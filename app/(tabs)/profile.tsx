@@ -1,13 +1,16 @@
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { useAuth } from '@/contexts/auth';
+import { useTheme } from '@/contexts/theme';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const { user, logout, deleteAccount } = useAuth();
+  const { colors, isDark, toggleTheme } = useTheme();
   const [deleting, setDeleting] = useState(false);
 
   const handleLogout = () => {
@@ -18,7 +21,6 @@ export default function ProfileScreen() {
   };
 
   const handleDelete = () => {
-    // habits stay in the db even after account deletion — they're not tied to the user row
     Alert.alert(
       'Delete account',
       'This will permanently delete your account. Your habit data will remain on this device.',
@@ -36,11 +38,66 @@ export default function ProfileScreen() {
     );
   };
 
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 18, paddingTop: 10 },
+    headerRow: { alignItems: 'flex-start', marginBottom: 8 },
+    headerLogo: { height: 28, width: 120 },
+    avatarRow: { alignItems: 'center', flexDirection: 'row', gap: 16, marginBottom: 28, marginTop: 8 },
+    avatar: {
+      alignItems: 'center',
+      backgroundColor: colors.avatarBg,
+      borderRadius: 999,
+      height: 56,
+      justifyContent: 'center',
+      width: 56,
+    },
+    avatarText: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
+    name: { color: colors.textStrong, fontSize: 18, fontWeight: '700' },
+    email: { color: colors.textSubdued, fontSize: 13, marginTop: 2 },
+    section: { marginBottom: 16 },
+    sectionTitle: {
+      color: colors.textLabel,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      paddingHorizontal: 16,
+    },
+    row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 14 },
+    rowLabel: { color: colors.textLabel, fontSize: 15, fontWeight: '500' },
+    rowValue: { color: colors.textSubdued, fontSize: 15, maxWidth: '60%', textAlign: 'right' },
+    divider: { backgroundColor: colors.divider, height: 1 },
+    themeRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+    },
+    themeLeft: { alignItems: 'center', flexDirection: 'row', gap: 10 },
+    themeLabel: { color: colors.textLabel, fontSize: 15, fontWeight: '500' },
+    danger: { marginTop: 16 },
+    dangerTitle: {
+      color: colors.danger,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerRow}>
         <Image
-          source={require('@/assets/images/logo.svg')}
+          source={isDark ? require('@/assets/images/logo-dark.svg') : require('@/assets/images/logo.svg')}
           style={styles.headerLogo}
           contentFit="contain"
         />
@@ -48,7 +105,6 @@ export default function ProfileScreen() {
       <ScreenHeader title="Profile" />
 
       <View style={styles.avatarRow}>
-        {/* just using the first letter of the name as a simple avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{user?.name.charAt(0).toUpperCase()}</Text>
         </View>
@@ -61,9 +117,33 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.card}>
-          <Row label="Name" value={user?.name ?? ''} />
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>Name</Text>
+            <Text style={styles.rowValue}>{user?.name ?? ''}</Text>
+          </View>
           <View style={styles.divider} />
-          <Row label="Email" value={user?.email ?? ''} />
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>Email</Text>
+            <Text style={styles.rowValue}>{user?.email ?? ''}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Appearance</Text>
+        <View style={styles.card}>
+          <Pressable onPress={toggleTheme} accessibilityRole="switch" accessibilityLabel="Toggle dark mode" style={styles.themeRow}>
+            <View style={styles.themeLeft}>
+              <Ionicons name={isDark ? 'moon' : 'sunny'} size={18} color={colors.primary} />
+              <Text style={styles.themeLabel}>{isDark ? 'Dark mode' : 'Light mode'}</Text>
+            </View>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={isDark ? '#FFFFFF' : '#FFFFFF'}
+            />
+          </Pressable>
         </View>
       </View>
 
@@ -82,108 +162,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F7F5F2',
-    flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-  },
-  headerRow: {
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  headerLogo: {
-    height: 28,
-    width: 120,
-  },
-  avatarRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 28,
-    marginTop: 8,
-  },
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 999,
-    height: 56,
-    justifyContent: 'center',
-    width: 56,
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  name: {
-    color: '#111827',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  email: {
-    color: '#6B7280',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  section: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    color: '#374151',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-  },
-  rowLabel: {
-    color: '#374151',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  rowValue: {
-    color: '#6B7280',
-    fontSize: 15,
-    maxWidth: '60%',
-    textAlign: 'right',
-  },
-  divider: {
-    backgroundColor: '#F1F5F9',
-    height: 1,
-  },
-  danger: {
-    marginTop: 16,
-  },
-  dangerTitle: {
-    color: '#B91C1C',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-});

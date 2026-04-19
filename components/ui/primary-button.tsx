@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
   variant?: 'primary' | 'secondary' | 'teal' | 'danger';
 };
 
-// single button component used throughout the app — variant controls the colour scheme
 export default function PrimaryButton({
   label,
   onPress,
@@ -17,6 +16,32 @@ export default function PrimaryButton({
   disabled = false,
   variant = 'primary',
 }: Props) {
+  const { colors } = useTheme();
+  const styles = StyleSheet.create({
+    button: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+    },
+    secondary: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderWidth: 1,
+    },
+    teal: { backgroundColor: colors.teal },
+    danger: { backgroundColor: colors.danger },
+    compact: { alignSelf: 'flex-start', marginTop: 12, paddingHorizontal: 12, paddingVertical: 8 },
+    disabled: { backgroundColor: colors.border, borderColor: colors.border },
+    pressed: { opacity: 0.85 },
+    label: { color: colors.card, fontSize: 15, fontWeight: '600' },
+    secondaryLabel: { color: colors.text },
+    tealLabel: { color: '#FFFFFF' },
+    compactLabel: { fontSize: 13 },
+    disabledLabel: { color: colors.textMuted },
+  });
+
   return (
     <Pressable
       accessibilityLabel={`${label}, click to perform action`}
@@ -47,54 +72,3 @@ export default function PrimaryButton({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  secondary: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
-    borderWidth: 1,
-  },
-  teal: {
-    backgroundColor: Colors.teal,
-  },
-  danger: {
-    backgroundColor: Colors.danger,
-  },
-  compact: {
-    alignSelf: 'flex-start',
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  disabled: {
-    backgroundColor: Colors.border,
-    borderColor: Colors.border,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  label: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  secondaryLabel: {
-    color: Colors.text,
-  },
-  tealLabel: {
-    color: Colors.white,
-  },
-  compactLabel: {
-    fontSize: 13,
-  },
-  disabledLabel: {
-    color: Colors.muted,
-  },
-});

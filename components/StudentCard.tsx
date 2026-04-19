@@ -1,4 +1,5 @@
-import { Colors, midtoneColor, pastelTextColor } from '@/constants/theme';
+import { midtoneColor, pastelTextColor } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { Habit, HabitContext } from '@/app/_layout';
 import { Ionicons } from '@expo/vector-icons';
 import { decrementHabitCount, getHabits, incrementHabitCount, markHabitDoneToday, unmarkHabitDoneToday } from '@/db/queries';
@@ -10,18 +11,24 @@ type Props = {
   habit: Habit;
 };
 
-function Chip({ label, color }: { label: string; color: string }) {
-  const textColor = pastelTextColor(color);
+function Chip({ label, color, textColor: explicitTextColor }: { label: string; color: string; textColor?: string }) {
+  const textColor = explicitTextColor ?? pastelTextColor(color);
   return (
-    <View style={[styles.chip, { backgroundColor: color }]}>
-      <Text style={[styles.chipText, { color: textColor }]}>{label}</Text>
+    <View style={[chipStyles.chip, { backgroundColor: color }]}>
+      <Text style={[chipStyles.chipText, { color: textColor }]}>{label}</Text>
     </View>
   );
 }
 
+const chipStyles = StyleSheet.create({
+  chip: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  chipText: { fontSize: 11, fontWeight: '600' },
+});
+
 export default function HabitCard({ habit }: Props) {
   const router = useRouter();
   const context = useContext(HabitContext);
+  const { colors } = useTheme();
 
   const openDetails = () =>
     router.push({ pathname: '/student/[id]', params: { id: habit.id.toString() } });
@@ -45,12 +52,54 @@ export default function HabitCard({ habit }: Props) {
   const increment = async () => { await incrementHabitCount(habit.id); await refresh(); };
   const decrement = async () => { await decrementHabitCount(habit.id); await refresh(); };
 
-  // "3 days" for daily habits, "3 wks" for weekly
   const streakLabel = `${habit.currentStreak} ${habit.frequency === 'weekly' ? 'wk' : 'day'}${habit.currentStreak !== 1 ? 's' : ''}`;
+
+  const styles = StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    topRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    nameArea: { flex: 1, marginRight: 10 },
+    pressed: { opacity: 0.7 },
+    name: { color: colors.text, fontSize: 16, fontWeight: '700' },
+    checkBtn: {
+      alignItems: 'center',
+      borderColor: colors.border,
+      borderRadius: 20,
+      borderWidth: 1.5,
+      height: 40,
+      justifyContent: 'center',
+      width: 40,
+    },
+    countControl: { alignItems: 'center', flexDirection: 'row', gap: 6 },
+    countBtn: {
+      alignItems: 'center',
+      backgroundColor: colors.bg,
+      borderRadius: 8,
+      height: 32,
+      justifyContent: 'center',
+      width: 32,
+    },
+    countBtnText: { color: colors.text, fontSize: 18, fontWeight: '500', lineHeight: 22 },
+    countValue: { color: colors.text, fontSize: 14, fontWeight: '700', minWidth: 24, textAlign: 'center' },
+    chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    progressSection: { marginTop: 10 },
+    progressLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+    progressLabel: { color: colors.textMuted, fontSize: 11 },
+    targetMet: { color: colors.teal, fontSize: 11, fontWeight: '600' },
+    remaining: { color: colors.textMuted, fontSize: 11 },
+    progressTrack: { backgroundColor: colors.border, borderRadius: 999, height: 4, overflow: 'hidden' },
+    progressFill: { backgroundColor: colors.teal, borderRadius: 999, height: 4 },
+  });
 
   return (
     <View style={styles.card}>
-      {/* Top row: name + action button */}
       <View style={styles.topRow}>
         <Pressable
           onPress={openDetails}
@@ -87,22 +136,20 @@ export default function HabitCard({ habit }: Props) {
             <Ionicons
               name={habit.completedToday ? 'checkmark' : 'checkmark-outline'}
               size={20}
-              color={habit.completedToday ? Colors.white : Colors.muted}
+              color={habit.completedToday ? '#FFFFFF' : colors.textMuted}
             />
           </Pressable>
         )}
       </View>
 
-      {/* Chips row */}
       <View style={styles.chipsRow}>
         <Chip label={habit.categoryName} color={habit.categoryColor} />
-        <Chip label={habit.frequency} color={Colors.tealLight} />
+        <Chip label={habit.frequency} color={colors.tealLight} textColor={colors.tealDark} />
         {habit.currentStreak > 0 && (
           <Chip label={`🔥 ${streakLabel}`} color="#FEF3C7" />
         )}
       </View>
 
-      {/* Progress bar */}
       {habit.targetCount !== null && (
         <View style={styles.progressSection}>
           <View style={styles.progressLabelRow}>
@@ -130,118 +177,3 @@ export default function HabitCard({ habit }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  topRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  nameArea: {
-    flex: 1,
-    marginRight: 10,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  name: {
-    color: Colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  // Circular checkmark button
-  checkBtn: {
-    alignItems: 'center',
-    borderColor: Colors.border,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    height: 40,
-    justifyContent: 'center',
-    width: 40,
-  },
-  // Count control (for count-type habits)
-  countControl: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 6,
-  },
-  countBtn: {
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    height: 32,
-    justifyContent: 'center',
-    width: 32,
-  },
-  countBtnText: {
-    color: Colors.text,
-    fontSize: 18,
-    fontWeight: '500',
-    lineHeight: 22,
-  },
-  countValue: {
-    color: Colors.text,
-    fontSize: 14,
-    fontWeight: '700',
-    minWidth: 24,
-    textAlign: 'center',
-  },
-  // Chips
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  chip: {
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  chipText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  // Progress
-  progressSection: {
-    marginTop: 10,
-  },
-  progressLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  progressLabel: {
-    color: Colors.muted,
-    fontSize: 11,
-  },
-  targetMet: {
-    color: Colors.teal,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  remaining: {
-    color: Colors.muted,
-    fontSize: 11,
-  },
-  progressTrack: {
-    backgroundColor: Colors.border,
-    borderRadius: 999,
-    height: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    backgroundColor: Colors.teal,
-    borderRadius: 999,
-    height: 4,
-  },
-});

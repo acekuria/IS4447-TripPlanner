@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import PrimaryButton from '@/components/ui/primary-button';
 import FormField from '@/components/ui/form-field';
 import { useAuth } from '@/contexts/auth';
@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function LoginScreen() {
   const { login } = useAuth();
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,7 +23,6 @@ export default function LoginScreen() {
       setError('Please enter your email and password.');
       return;
     }
-    // basic regex to catch obviously invalid emails before hitting the database
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError('Please enter a valid email address.');
       return;
@@ -33,9 +33,28 @@ export default function LoginScreen() {
     if (!result.success) setError(result.error ?? 'Login failed.');
   };
 
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1 },
+    content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 },
+    hero: { alignItems: 'center', marginBottom: 32 },
+    logo: { height: 56, width: 200, marginBottom: 12 },
+    tagline: { color: colors.textMuted, fontSize: 14, marginTop: 6 },
+    card: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      padding: 24,
+    },
+    title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 20 },
+    error: { color: colors.danger, fontSize: 13, marginBottom: 12 },
+    footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+    footerText: { color: colors.textMuted, fontSize: 14 },
+    link: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* KeyboardAvoidingView pushes the form up on iOS so the keyboard doesn't cover the inputs */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -43,7 +62,7 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.hero}>
             <Image
-              source={require('@/assets/images/logo.svg')}
+              source={isDark ? require('@/assets/images/logo-dark.svg') : require('@/assets/images/logo.svg')}
               style={styles.logo}
               contentFit="contain"
             />
@@ -83,62 +102,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: Colors.surface,
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-  },
-  hero: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logo: {
-    height: 56,
-    width: 200,
-    marginBottom: 12,
-  },
-  tagline: {
-    color: Colors.muted,
-    fontSize: 14,
-    marginTop: 6,
-  },
-  card: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 24,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  error: {
-    color: Colors.danger,
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  footerText: {
-    color: Colors.muted,
-    fontSize: 14,
-  },
-  link: {
-    color: Colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

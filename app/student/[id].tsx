@@ -1,6 +1,7 @@
 import InfoTag from '@/components/ui/info-tag';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { useTheme } from '@/contexts/theme';
 import { sqlite } from '@/db/client';
 import { getHabitProgress, getHabits, markHabitDoneToday, type HabitProgress, unmarkHabitDoneToday } from '@/db/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,6 +22,7 @@ export default function HabitDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const context = useContext(HabitContext);
+  const { colors } = useTheme();
   const [progress, setProgress] = useState<HabitProgress>({ currentStreak: 0, recentLogs: [] });
 
   if (!context) return null;
@@ -30,13 +32,7 @@ export default function HabitDetail() {
 
   useEffect(() => {
     if (!habit) return;
-
-    const loadProgress = async () => {
-      const next = await getHabitProgress(habit.id, habit.frequency);
-      setProgress(next);
-    };
-
-    void loadProgress();
+    void getHabitProgress(habit.id, habit.frequency).then(setProgress);
   }, [habit]);
 
   if (!habit) return null;
@@ -55,10 +51,7 @@ export default function HabitDetail() {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          // navigate back first to avoid a re-render with a now-deleted habit
           router.back();
-          // foreign key cascade wasn't firing reliably with expo-sqlite,
-          // so we manually delete child rows before the parent
           sqlite.execSync(`DELETE FROM habit_logs WHERE habit_id = ${Number(id)}`);
           sqlite.execSync(`DELETE FROM targets WHERE habit_id = ${Number(id)}`);
           sqlite.execSync(`DELETE FROM habits WHERE id = ${Number(id)}`);
@@ -74,9 +67,67 @@ export default function HabitDetail() {
     } else {
       await markHabitDoneToday(habit.id);
     }
-
     await refreshHabitData();
   };
+
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, padding: 20 },
+    content: { paddingBottom: 32 },
+    tags: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 18 },
+    notesSection: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 16,
+      padding: 14,
+    },
+    notesSectionTitle: {
+      color: colors.textSubdued,
+      fontSize: 12,
+      fontWeight: '600',
+      marginBottom: 4,
+      textTransform: 'uppercase',
+    },
+    notesText: { color: colors.textLabel, fontSize: 14, lineHeight: 20 },
+    buttonSpacing: { marginTop: 10 },
+    goalSection: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 16,
+      padding: 14,
+    },
+    goalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    goalText: { color: colors.textLabel, fontSize: 14, fontWeight: '600' },
+    targetMet: { color: '#16A34A', fontSize: 14, fontWeight: '600' },
+    remaining: { color: colors.textSubdued, fontSize: 14 },
+    progressBarTrack: { backgroundColor: colors.inputBorder, borderRadius: 999, height: 8, overflow: 'hidden' },
+    progressBarFill: { borderRadius: 999, height: 6 },
+    section: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      marginTop: 18,
+      padding: 16,
+    },
+    sectionTitle: { color: colors.textStrong, fontSize: 18, fontWeight: '700' },
+    sectionSubtitle: { color: colors.textSubdued, fontSize: 14, marginTop: 4 },
+    emptyText: { color: colors.textSubdued, fontSize: 14, marginTop: 12 },
+    logRow: {
+      alignItems: 'center',
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 12,
+      paddingTop: 12,
+    },
+    logDate: { color: colors.textStrong, fontSize: 15, fontWeight: '600' },
+    logValue: { color: colors.teal, fontSize: 15, fontWeight: '700' },
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -129,31 +180,18 @@ export default function HabitDetail() {
         <PrimaryButton
           label={habit.completedToday ? 'Done today' : 'Mark as done today'}
           variant={habit.completedToday ? 'secondary' : 'primary'}
-          onPress={() => {
-            void toggleToday();
-          }}
+          onPress={() => { void toggleToday(); }}
         />
 
         <View style={styles.buttonSpacing}>
           <PrimaryButton
             label="Edit"
-            onPress={() =>
-              router.push({
-                pathname: '../student/[id]/edit',
-                params: { id },
-              })
-            }
+            onPress={() => router.push({ pathname: '../student/[id]/edit', params: { id } })}
           />
         </View>
 
         <View style={styles.buttonSpacing}>
-          <PrimaryButton
-            label="Delete"
-            variant="danger"
-            onPress={() => {
-              void deleteHabit();
-            }}
-          />
+          <PrimaryButton label="Delete" variant="danger" onPress={() => { void deleteHabit(); }} />
         </View>
 
         <View style={styles.section}>
@@ -174,121 +212,3 @@ export default function HabitDetail() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#F8FAFC',
-    flex: 1,
-    padding: 20,
-  },
-  content: {
-    paddingBottom: 32,
-  },
-  tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 18,
-  },
-  notesSection: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 14,
-  },
-  notesSectionTitle: {
-    color: '#64748B',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  notesText: {
-    color: '#374151',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  buttonSpacing: {
-    marginTop: 10,
-  },
-  goalSection: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 14,
-  },
-  goalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  goalText: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  targetMet: {
-    color: '#16A34A',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  remaining: {
-    color: '#6B7280',
-    fontSize: 14,
-  },
-  progressBarTrack: {
-    backgroundColor: '#CBD5E1',
-    borderRadius: 999,
-    height: 8,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    borderRadius: 999,
-    height: 6,
-  },
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 18,
-    padding: 16,
-  },
-  sectionTitle: {
-    color: '#0F172A',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  sectionSubtitle: {
-    color: '#64748B',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  emptyText: {
-    color: '#64748B',
-    fontSize: 14,
-    marginTop: 12,
-  },
-  logRow: {
-    alignItems: 'center',
-    borderTopColor: '#E2E8F0',
-    borderTopWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingTop: 12,
-  },
-  logDate: {
-    color: '#0F172A',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  logValue: {
-    color: '#0F766E',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});

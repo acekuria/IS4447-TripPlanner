@@ -2,7 +2,7 @@ import HabitCard from '@/components/StudentCard';
 import EmptyState from '@/components/ui/empty-state';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme';
 import { sqlite } from '@/db/client';
 import { getHabits } from '@/db/queries';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,7 @@ const dateRangeOptions = ['All time', 'Today', 'This week', 'This month'];
 export default function IndexScreen() {
   const router = useRouter();
   const context = useContext(HabitContext);
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFrequency, setSelectedFrequency] = useState('All');
   const [selectedDateRange, setSelectedDateRange] = useState('All time');
@@ -35,7 +36,6 @@ export default function IndexScreen() {
 
   useDrizzleStudio(sqlite);
 
-  // refresh habits every time this tab is focused so category colour changes show up immediately
   useFocusEffect(
     useCallback(() => {
       if (!context) return;
@@ -82,18 +82,97 @@ export default function IndexScreen() {
     return matchesSearch && matchesFrequency && matchesCategory && matchesDateRange;
   });
 
+  const styles = StyleSheet.create({
+    safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 18, paddingTop: 10 },
+    searchRow: { alignItems: 'center', flexDirection: 'row', gap: 10, marginTop: 14 },
+    searchInput: {
+      backgroundColor: colors.inputBg,
+      borderColor: colors.border,
+      borderRadius: 10,
+      borderWidth: 1,
+      color: colors.text,
+      flex: 1,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    filterBtn: {
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 10,
+      borderWidth: 1,
+      height: 42,
+      justifyContent: 'center',
+      width: 42,
+    },
+    filterBtnActive: { backgroundColor: colors.primaryLight, borderColor: colors.primaryBorder },
+    badge: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 999,
+      bottom: 6,
+      height: 14,
+      justifyContent: 'center',
+      position: 'absolute',
+      right: 6,
+      width: 14,
+    },
+    badgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '700' },
+    listContent: { paddingBottom: 24, paddingTop: 14 },
+    overlay: { backgroundColor: 'rgba(0,0,0,0.5)', flex: 1 },
+    sheet: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: 32,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
+    sheetHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+    sheetTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
+    clearText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+    filterGroup: { marginBottom: 18 },
+    filterGroupLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 10,
+      textTransform: 'uppercase',
+    },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chip: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderRadius: 999,
+      borderWidth: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+    },
+    chipSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+    chipText: { color: colors.text, fontSize: 13, fontWeight: '500' },
+    chipTextSelected: { color: colors.primary, fontWeight: '600' },
+    doneBtn: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      marginTop: 4,
+      paddingVertical: 14,
+    },
+    doneBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScreenHeader title="Habits" subtitle={`${habits.length} tracked`} />
       <PrimaryButton label="Add Habit" onPress={() => router.push({ pathname: '../add' })} />
 
-      {/* Search + Filter row */}
       <View style={styles.searchRow}>
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search habits…"
-          placeholderTextColor={Colors.muted}
+          placeholderTextColor={colors.textMuted}
           style={styles.searchInput}
         />
         <Pressable
@@ -105,7 +184,7 @@ export default function IndexScreen() {
           <Ionicons
             name="options-outline"
             size={18}
-            color={activeFilterCount > 0 ? Colors.primary : Colors.muted}
+            color={activeFilterCount > 0 ? colors.primary : colors.textMuted}
           />
           {activeFilterCount > 0 && (
             <View style={styles.badge}>
@@ -115,7 +194,6 @@ export default function IndexScreen() {
         </Pressable>
       </View>
 
-      {/* Habit list */}
       <ScrollView contentContainerStyle={styles.listContent}>
         {habits.length === 0 ? (
           <EmptyState
@@ -136,7 +214,6 @@ export default function IndexScreen() {
         )}
       </ScrollView>
 
-      {/* Filter bottom sheet */}
       <Modal
         visible={sheetOpen}
         transparent
@@ -145,7 +222,6 @@ export default function IndexScreen() {
       >
         <Pressable style={styles.overlay} onPress={() => setSheetOpen(false)} />
         <View style={styles.sheet}>
-          {/* Sheet header */}
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Filters</Text>
             {activeFilterCount > 0 && (
@@ -155,41 +231,50 @@ export default function IndexScreen() {
             )}
           </View>
 
-          <FilterGroup label="Category">
+          <FilterGroup label="Category" colors={colors}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
               {categoryOptions.map((opt) => (
-                <FilterChip
+                <Pressable
                   key={opt}
-                  label={opt}
-                  selected={selectedCategory === opt}
                   onPress={() => setSelectedCategory(opt)}
-                />
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter ${opt}`}
+                  style={[styles.chip, selectedCategory === opt && styles.chipSelected]}
+                >
+                  <Text style={[styles.chipText, selectedCategory === opt && styles.chipTextSelected]}>{opt}</Text>
+                </Pressable>
               ))}
             </ScrollView>
           </FilterGroup>
 
-          <FilterGroup label="Frequency">
+          <FilterGroup label="Frequency" colors={colors}>
             <View style={styles.chipRow}>
               {frequencyOptions.map((opt) => (
-                <FilterChip
+                <Pressable
                   key={opt}
-                  label={opt}
-                  selected={selectedFrequency === opt}
                   onPress={() => setSelectedFrequency(opt)}
-                />
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter ${opt}`}
+                  style={[styles.chip, selectedFrequency === opt && styles.chipSelected]}
+                >
+                  <Text style={[styles.chipText, selectedFrequency === opt && styles.chipTextSelected]}>{opt}</Text>
+                </Pressable>
               ))}
             </View>
           </FilterGroup>
 
-          <FilterGroup label="Activity">
+          <FilterGroup label="Activity" colors={colors}>
             <View style={styles.chipRow}>
               {dateRangeOptions.map((opt) => (
-                <FilterChip
+                <Pressable
                   key={opt}
-                  label={opt}
-                  selected={selectedDateRange === opt}
                   onPress={() => setSelectedDateRange(opt)}
-                />
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter ${opt}`}
+                  style={[styles.chip, selectedDateRange === opt && styles.chipSelected]}
+                >
+                  <Text style={[styles.chipText, selectedDateRange === opt && styles.chipTextSelected]}>{opt}</Text>
+                </Pressable>
               ))}
             </View>
           </FilterGroup>
@@ -208,169 +293,13 @@ export default function IndexScreen() {
   );
 }
 
-function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function FilterGroup({ label, children, colors }: { label: string; children: React.ReactNode; colors: any }) {
   return (
-    <View style={styles.filterGroup}>
-      <Text style={styles.filterGroupLabel}>{label}</Text>
+    <View style={{ marginBottom: 18 }}>
+      <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: 10, textTransform: 'uppercase' }}>
+        {label}
+      </Text>
       {children}
     </View>
   );
 }
-
-function FilterChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`Filter ${label}`}
-      style={[styles.chip, selected && styles.chipSelected]}
-    >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: Colors.surface,
-    flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-  },
-  searchRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
-  searchInput: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    color: Colors.text,
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  filterBtn: {
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    height: 42,
-    justifyContent: 'center',
-    width: 42,
-  },
-  filterBtnActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primaryBorder,
-  },
-  badge: {
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 999,
-    bottom: 6,
-    height: 14,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 6,
-    width: 14,
-  },
-  badgeText: {
-    color: Colors.white,
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  listContent: {
-    paddingBottom: 24,
-    paddingTop: 14,
-  },
-  // Bottom sheet
-  overlay: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    flex: 1,
-  },
-  sheet: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  sheetHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  sheetTitle: {
-    color: Colors.text,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  clearText: {
-    color: Colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  filterGroup: {
-    marginBottom: 18,
-  },
-  filterGroupLabel: {
-    color: Colors.muted,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-    textTransform: 'uppercase',
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  chipSelected: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
-  },
-  chipText: {
-    color: Colors.text,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  chipTextSelected: {
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  doneBtn: {
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    marginTop: 4,
-    paddingVertical: 14,
-  },
-  doneBtnText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});
