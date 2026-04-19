@@ -7,12 +7,13 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { PASTEL_BG_LIST } from '@/constants/theme';
+import { midtoneColor, PASTEL_BG_LIST } from '@/constants/theme';
 const PRESET_COLORS = PASTEL_BG_LIST;
 
 export default function AddCategory() {
   const router = useRouter();
   const [name, setName] = useState('');
+  // default to the first pastel in the list so the picker always has something selected
   const [color, setColor] = useState(PRESET_COLORS[0]);
 
   const save = async () => {
@@ -37,7 +38,7 @@ export default function AddCategory() {
               accessibilityLabel={`Select colour ${c}`}
               style={[
                 styles.colorSwatch,
-                { backgroundColor: c },
+                { backgroundColor: midtoneColor(c) },
                 color === c && styles.colorSwatchSelected,
               ]}
             />
@@ -45,7 +46,7 @@ export default function AddCategory() {
         </View>
 
         <View style={styles.preview}>
-          <View style={[styles.previewSwatch, { backgroundColor: color }]} />
+          <View style={[styles.previewSwatch, { backgroundColor: midtoneColor(color) }]} />
           <Text style={styles.previewName}>{name || 'Category name'}</Text>
         </View>
 

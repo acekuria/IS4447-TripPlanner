@@ -38,6 +38,7 @@ export default function EditHabit() {
     void loadCategories();
   }, []);
 
+  // pre-fill all fields from the existing habit once it's available
   useEffect(() => {
     if (!habit) return;
     setName(habit.name);
@@ -67,6 +68,7 @@ export default function EditHabit() {
     if (!isNaN(parsedTarget) && parsedTarget > 0) {
       await setHabitTarget(Number(id), parsedTarget, goalPeriod);
     } else {
+      // if the goal was cleared, remove the target row entirely
       await deleteHabitTarget(Number(id));
     }
 

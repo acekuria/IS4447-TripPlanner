@@ -28,6 +28,8 @@ function AppNavigator() {
   useEffect(() => {
     if (isLoading) return;
     const inTabsGroup = segments[0] === '(tabs)';
+    // checking for login/register specifically — a broader check accidentally redirected
+    // category edit pages back to tabs, which took a while to debug
     const inAuthScreen = segments[0] === 'login' || segments[0] === 'register';
     if (!user && inTabsGroup) {
       router.replace('/login' as never);
@@ -38,6 +40,7 @@ function AppNavigator() {
 
   useEffect(() => {
     if (!user) return;
+    // seed runs on first launch to give the app some demo data
     const load = async () => {
       await seedHabitsIfEmpty();
       const rows = await getHabits();

@@ -3,6 +3,7 @@ import { openDatabaseSync } from 'expo-sqlite';
 
 export const sqlite = openDatabaseSync('habits.db');
 
+// CREATE TABLE IF NOT EXISTS means this is safe to run every time the app starts
 sqlite.execSync(`
   PRAGMA foreign_keys = ON;
 
@@ -49,12 +50,15 @@ sqlite.execSync(`
     created_at TEXT NOT NULL
   );
 
+  -- CHECK (id = 1) enforces a single-row table so there's only ever one active session
   CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
   );
 `);
 
+// ALTER TABLE is used to add columns that didn't exist in the original schema
+// without wiping existing data — basically a manual migration
 const habitColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(habits);');
 if (!habitColumns.some((c) => c.name === 'log_type')) {
   sqlite.execSync(`ALTER TABLE habits ADD COLUMN log_type TEXT NOT NULL DEFAULT 'completion';`);

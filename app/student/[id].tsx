@@ -55,7 +55,10 @@ export default function HabitDetail() {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
+          // navigate back first to avoid a re-render with a now-deleted habit
           router.back();
+          // foreign key cascade wasn't firing reliably with expo-sqlite,
+          // so we manually delete child rows before the parent
           sqlite.execSync(`DELETE FROM habit_logs WHERE habit_id = ${Number(id)}`);
           sqlite.execSync(`DELETE FROM targets WHERE habit_id = ${Number(id)}`);
           sqlite.execSync(`DELETE FROM habits WHERE id = ${Number(id)}`);

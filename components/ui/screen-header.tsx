@@ -7,6 +7,7 @@ type Props = {
   onBack?: () => void;
 };
 
+// shows the page title, optional subtitle, and an optional back button
 export default function ScreenHeader({ title, subtitle, onBack }: Props) {
   return (
     <View style={styles.container}>

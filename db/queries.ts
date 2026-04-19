@@ -70,6 +70,7 @@ function getWeekStart(date: Date) {
 function calculateDailyStreak(logDates: string[]) {
   const logSet = new Set(logDates);
   let streak = 0;
+  // walk backwards from today, counting consecutive days with a log
   let current = parseDateString(getTodayDateString());
 
   while (logSet.has(formatDateString(current))) {
@@ -128,6 +129,7 @@ export async function getHabits(): Promise<HabitRecord[]> {
   const weekEnd = formatDateString(addDays(parseDateString(weekStart), 6));
   const currentMonth = today.slice(0, 7);
 
+  // group all logs by habit id so we don't have to filter the full array repeatedly below
   const logsByHabit = new Map<number, Array<{ date: string; value: number }>>();
   for (const log of logs) {
     const arr = logsByHabit.get(log.habitId) ?? [];
@@ -426,6 +428,7 @@ export async function getHabitProgress(habitId: number, frequency: string): Prom
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+// passwords are stored as plain text here — in a real app you'd hash them with bcrypt
 
 export type AuthUser = { id: number; name: string; email: string };
 

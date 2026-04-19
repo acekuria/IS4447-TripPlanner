@@ -9,6 +9,7 @@ type Props = {
   variant?: 'primary' | 'secondary' | 'teal' | 'danger';
 };
 
+// single button component used throughout the app — variant controls the colour scheme
 export default function PrimaryButton({
   label,
   onPress,

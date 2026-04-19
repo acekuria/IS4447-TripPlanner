@@ -4,10 +4,12 @@ import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { Colors } from '@/constants/theme';
 import { sqlite } from '@/db/client';
+import { getHabits } from '@/db/queries';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useRouter } from 'expo-router';
-import { useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -32,6 +34,14 @@ export default function IndexScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useDrizzleStudio(sqlite);
+
+  // refresh habits every time this tab is focused so category colour changes show up immediately
+  useFocusEffect(
+    useCallback(() => {
+      if (!context) return;
+      void getHabits().then(context.setHabits);
+    }, [context])
+  );
 
   if (!context) return null;
 

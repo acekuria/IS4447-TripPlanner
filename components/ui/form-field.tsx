@@ -7,6 +7,7 @@ type Props = {
   placeholder?: string;
 } & Pick<TextInputProps, 'secureTextEntry' | 'keyboardType' | 'autoCapitalize' | 'multiline' | 'numberOfLines'>;
 
+// wraps a label + TextInput together so every form field looks consistent
 export default function FormField({ label, value, onChangeText, placeholder, ...rest }: Props) {
   return (
     <View style={styles.wrapper}>

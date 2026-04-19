@@ -168,11 +168,13 @@ function buildLogs(name: string): LogEntry[] {
 // ─── main seed function ───────────────────────────────────────────────────────
 
 export async function seedHabitsIfEmpty() {
+  // always upsert categories so colour changes in defaultCategories are picked up on next launch
   await db
     .insert(categories)
     .values(defaultCategories)
     .onConflictDoUpdate({ target: categories.id, set: { color: sql`excluded.color` } });
 
+  // skip inserting habits and logs if they already exist — we don't want duplicates
   const existingHabits = await db.select().from(habits);
   if (existingHabits.length > 0) {
     await seedTargets();

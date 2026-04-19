@@ -1,7 +1,7 @@
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
-import { PASTEL_BG_LIST } from '@/constants/theme';
+import { midtoneColor, PASTEL_BG_LIST } from '@/constants/theme';
 import { getCategories, updateCategory } from '@/db/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -16,6 +16,7 @@ export default function EditCategory() {
   const [name, setName] = useState('');
   const [color, setColor] = useState(PRESET_COLORS[0]);
 
+  // load the existing category values to pre-fill the form
   useEffect(() => {
     const load = async () => {
       const cats = await getCategories();
@@ -50,7 +51,7 @@ export default function EditCategory() {
               accessibilityLabel={`Select colour ${c}`}
               style={[
                 styles.colorSwatch,
-                { backgroundColor: c },
+                { backgroundColor: midtoneColor(c) },
                 color === c && styles.colorSwatchSelected,
               ]}
             />
@@ -58,7 +59,7 @@ export default function EditCategory() {
         </View>
 
         <View style={styles.preview}>
-          <View style={[styles.previewSwatch, { backgroundColor: color }]} />
+          <View style={[styles.previewSwatch, { backgroundColor: midtoneColor(color) }]} />
           <Text style={styles.previewName}>{name || 'Category name'}</Text>
         </View>
 

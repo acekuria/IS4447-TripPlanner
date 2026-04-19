@@ -1,3 +1,5 @@
+// Drizzle schema — these definitions mirror the CREATE TABLE statements in client.ts
+// and are used for type-safe queries throughout the app
 import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const categories = sqliteTable('categories', {
@@ -45,7 +47,7 @@ export const targets = sqliteTable('targets', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   habitId: integer('habit_id')
     .notNull()
-    .unique()
+    .unique() // one target per habit max
     .references(() => habits.id, { onDelete: 'cascade' }),
   targetCount: integer('weekly_target').notNull().default(1),
   period: text('period').notNull().default('weekly'),

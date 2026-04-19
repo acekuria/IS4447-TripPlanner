@@ -1,5 +1,6 @@
 import EmptyState from '@/components/ui/empty-state';
 import ScreenHeader from '@/components/ui/screen-header';
+import { midtoneColor } from '@/constants/theme';
 import { getInsightsData, InsightsData } from '@/db/queries';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
@@ -83,18 +84,20 @@ export default function InsightsScreen() {
         <SectionTitle>Category breakdown — last 28 days</SectionTitle>
         <View style={styles.breakdownCard}>
           {(() => {
+            // divide each category's logs by the total so the bars show share of activity, not a rate
             const totalCompleted = data.categoryBreakdown.reduce((s, c) => s + c.completed, 0);
             return data.categoryBreakdown.map((cat) => {
               const pct = totalCompleted > 0 ? Math.round((cat.completed / totalCompleted) * 100) : 0;
+              const accent = midtoneColor(cat.color);
               return (
                 <View key={cat.name} style={styles.catRow}>
                   <View style={styles.catLabelRow}>
-                    <View style={[styles.catDot, { backgroundColor: cat.color }]} />
+                    <View style={[styles.catDot, { backgroundColor: accent }]} />
                     <Text style={styles.catName}>{cat.name}</Text>
                     <Text style={styles.catPct}>{pct}%</Text>
                   </View>
                   <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${pct}%` as any, backgroundColor: cat.color }]} />
+                    <View style={[styles.progressFill, { width: `${pct}%` as any, backgroundColor: accent }]} />
                   </View>
                 </View>
               );
@@ -109,7 +112,7 @@ export default function InsightsScreen() {
             <View key={item.name} style={[styles.streakRow, i < data.topStreaks.length - 1 && styles.streakRowBorder]}>
               <View style={styles.streakLeft}>
                 <Text style={styles.streakRank}>#{i + 1}</Text>
-                <View style={[styles.catDot, { backgroundColor: item.color }]} />
+                <View style={[styles.catDot, { backgroundColor: midtoneColor(item.color) }]} />
                 <Text style={styles.streakName}>{item.name}</Text>
               </View>
               <View style={styles.streakBadge}>

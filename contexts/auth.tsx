@@ -16,6 +16,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // check the sessions table on startup to restore the logged-in user without AsyncStorage
   useEffect(() => {
     void getSessionUser().then((u) => {
       setUser(u);

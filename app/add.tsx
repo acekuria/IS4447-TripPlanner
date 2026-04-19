@@ -47,11 +47,13 @@ export default function AddHabit() {
       return;
     }
 
+    // .returning() gives us back the new row's id so we can attach a target to it
     const [inserted] = await db
       .insert(habitsTable)
       .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, notes: notes.trim() || null, count: 0 })
       .returning({ id: habitsTable.id });
 
+    // goal is optional — skip if the user left the field blank or entered 0
     const parsedTarget = parseInt(goalTarget, 10);
     if (!isNaN(parsedTarget) && parsedTarget > 0) {
       await setHabitTarget(inserted.id, parsedTarget, goalPeriod);

@@ -11,6 +11,7 @@ type Props = {
   onAction?: () => void;
 };
 
+// reusable placeholder shown when a list has no items to display
 export default function EmptyState({ icon, title, subtitle, actionLabel, onAction }: Props) {
   return (
     <View style={styles.container}>

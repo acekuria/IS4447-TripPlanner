@@ -22,6 +22,7 @@ export default function LoginScreen() {
       setError('Please enter your email and password.');
       return;
     }
+    // basic regex to catch obviously invalid emails before hitting the database
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError('Please enter a valid email address.');
       return;
@@ -34,6 +35,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* KeyboardAvoidingView pushes the form up on iOS so the keyboard doesn't cover the inputs */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}

@@ -1,4 +1,4 @@
-import { Colors, pastelTextColor } from '@/constants/theme';
+import { Colors, midtoneColor, pastelTextColor } from '@/constants/theme';
 import { Habit, HabitContext } from '@/app/_layout';
 import { Ionicons } from '@expo/vector-icons';
 import { decrementHabitCount, getHabits, incrementHabitCount, markHabitDoneToday, unmarkHabitDoneToday } from '@/db/queries';
@@ -45,6 +45,7 @@ export default function HabitCard({ habit }: Props) {
   const increment = async () => { await incrementHabitCount(habit.id); await refresh(); };
   const decrement = async () => { await decrementHabitCount(habit.id); await refresh(); };
 
+  // "3 days" for daily habits, "3 wks" for weekly
   const streakLabel = `${habit.currentStreak} ${habit.frequency === 'weekly' ? 'wk' : 'day'}${habit.currentStreak !== 1 ? 's' : ''}`;
 
   return (
@@ -75,7 +76,13 @@ export default function HabitCard({ habit }: Props) {
             onPress={() => { void toggleToday(); }}
             accessibilityRole="button"
             accessibilityLabel={habit.completedToday ? 'Unmark done today' : 'Mark as done today'}
-            style={[styles.checkBtn, habit.completedToday && styles.checkBtnDone]}
+            style={[
+              styles.checkBtn,
+              habit.completedToday && {
+                backgroundColor: midtoneColor(habit.categoryColor),
+                borderColor: midtoneColor(habit.categoryColor),
+              },
+            ]}
           >
             <Ionicons
               name={habit.completedToday ? 'checkmark' : 'checkmark-outline'}
@@ -111,7 +118,10 @@ export default function HabitCard({ habit }: Props) {
             <View
               style={[
                 styles.progressFill,
-                { width: `${Math.min((habit.targetProgress / habit.targetCount) * 100, 100)}%` },
+                {
+                  width: `${Math.min((habit.targetProgress / habit.targetCount) * 100, 100)}%`,
+                  backgroundColor: midtoneColor(habit.categoryColor),
+                },
               ]}
             />
           </View>
@@ -158,10 +168,6 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     width: 40,
-  },
-  checkBtnDone: {
-    backgroundColor: Colors.teal,
-    borderColor: Colors.teal,
   },
   // Count control (for count-type habits)
   countControl: {

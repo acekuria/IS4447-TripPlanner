@@ -18,6 +18,7 @@ export default function ProfileScreen() {
   };
 
   const handleDelete = () => {
+    // habits stay in the db even after account deletion — they're not tied to the user row
     Alert.alert(
       'Delete account',
       'This will permanently delete your account. Your habit data will remain on this device.',
@@ -47,6 +48,7 @@ export default function ProfileScreen() {
       <ScreenHeader title="Profile" />
 
       <View style={styles.avatarRow}>
+        {/* just using the first letter of the name as a simple avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{user?.name.charAt(0).toUpperCase()}</Text>
         </View>

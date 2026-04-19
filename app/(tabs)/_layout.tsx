@@ -2,6 +2,7 @@ import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
+// defines the four bottom tabs — order here controls the order shown in the tab bar
 export default function TabLayout() {
   return (
     <Tabs

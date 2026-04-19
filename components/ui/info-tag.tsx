@@ -9,6 +9,7 @@ type Props = {
 
 export default function InfoTag({ label, value, accentColor }: Props) {
   const bg = accentColor ?? Colors.tealLight;
+  // derive a readable text colour from the pastel background rather than hardcoding it
   const textColor = pastelTextColor(bg);
 
   return (

@@ -1,6 +1,7 @@
 import EmptyState from '@/components/ui/empty-state';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { midtoneColor } from '@/constants/theme';
 import { deleteCategory, getCategoriesWithCount } from '@/db/queries';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -18,6 +19,7 @@ type CategoryWithCount = {
 export default function CategoriesScreen() {
   const router = useRouter();
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
+  // habitCount is fetched alongside each category so we can block deletion of categories still in use
 
   const load = useCallback(async () => {
     const rows = await getCategoriesWithCount();
@@ -64,7 +66,7 @@ export default function CategoriesScreen() {
           categories.map((cat) => (
             <View key={cat.id} style={styles.card}>
               <View style={styles.left}>
-                <View style={[styles.swatch, { backgroundColor: cat.color }]} />
+                <View style={[styles.swatch, { backgroundColor: midtoneColor(cat.color) }]} />
                 <View>
                   <Text style={styles.name}>{cat.name}</Text>
                   <Text style={styles.count}>
