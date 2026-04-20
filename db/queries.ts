@@ -508,6 +508,28 @@ export function logoutUser() {
   sqlite.execSync('DELETE FROM sessions WHERE id = 1');
 }
 
+export async function getExportData(): Promise<{ habit: string; category: string; frequency: string; logType: string; date: string; value: number }[]> {
+  const userId = getSessionUserId();
+  if (!userId) return [];
+
+  const rows = await db
+    .select({
+      habit: habits.name,
+      category: categories.name,
+      frequency: habits.frequency,
+      logType: habits.logType,
+      date: habitLogs.date,
+      value: habitLogs.value,
+    })
+    .from(habitLogs)
+    .innerJoin(habits, eq(habitLogs.habitId, habits.id))
+    .innerJoin(categories, eq(habits.categoryId, categories.id))
+    .where(eq(habits.userId, userId))
+    .orderBy(habits.name, habitLogs.date);
+
+  return rows;
+}
+
 export async function deleteUser(id: number) {
   logoutUser();
   // delete the user's habits (and cascade to habit_logs + targets via FK)

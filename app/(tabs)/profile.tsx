@@ -2,8 +2,11 @@ import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { useAuth } from '@/contexts/auth';
 import { useTheme } from '@/contexts/theme';
+import { getExportData } from '@/db/queries';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,12 +15,45 @@ export default function ProfileScreen() {
   const { user, logout, deleteAccount } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign out', style: 'destructive', onPress: logout },
     ]);
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const rows = await getExportData();
+      if (rows.length === 0) {
+        Alert.alert('Nothing to export', 'No habit logs found for your account.');
+        return;
+      }
+
+      const header = 'Habit,Category,Frequency,Log Type,Date,Value\n';
+      const body = rows
+        .map((r) => `"${r.habit}","${r.category}","${r.frequency}","${r.logType}","${r.date}",${r.value}`)
+        .join('\n');
+      const csv = header + body;
+
+      const fileName = `habits-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+      await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: 'utf8' });
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, { mimeType: 'text/csv', dialogTitle: 'Export habit data' });
+      } else {
+        Alert.alert('Saved', `CSV saved to:\n${fileUri}`);
+      }
+    } catch (e) {
+      Alert.alert('Export failed', String(e));
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDelete = () => {
@@ -145,6 +181,15 @@ export default function ProfileScreen() {
             />
           </Pressable>
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Data</Text>
+        <PrimaryButton
+          label={exporting ? 'Exporting…' : 'Export to CSV'}
+          variant="secondary"
+          onPress={handleExport}
+        />
       </View>
 
       <View style={styles.section}>
