@@ -73,10 +73,33 @@ if (targetColumns.length > 0 && !targetColumns.some((c) => c.name === 'period'))
 }
 
 const categoryColumns = sqlite.getAllSync<{ name: string }>('PRAGMA table_info(categories);');
-const hasColorColumn = categoryColumns.some((column) => column.name === 'color');
 
-if (!hasColorColumn) {
+if (!categoryColumns.some((c) => c.name === 'color')) {
   sqlite.execSync(`ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#64748B';`);
+}
+
+if (!categoryColumns.some((c) => c.name === 'user_id')) {
+  // Recreate categories with user_id and per-user unique constraint.
+  // FK checks are disabled so existing habit references stay intact during the swap.
+  sqlite.execSync(`PRAGMA foreign_keys = OFF;`);
+  sqlite.execSync(`
+    CREATE TABLE categories_new (
+      id   INTEGER PRIMARY KEY,
+      name TEXT    NOT NULL,
+      color TEXT   NOT NULL DEFAULT '#64748B',
+      user_id INTEGER REFERENCES users(id),
+      UNIQUE(name, user_id)
+    );
+    INSERT OR IGNORE INTO categories_new (id, name, color)
+      SELECT id, name, color FROM categories;
+    DROP TABLE categories;
+    ALTER TABLE categories_new RENAME TO categories;
+  `);
+  sqlite.execSync(`PRAGMA foreign_keys = ON;`);
+}
+
+if (!habitColumns.some((c) => c.name === 'user_id')) {
+  sqlite.execSync(`ALTER TABLE habits ADD COLUMN user_id INTEGER REFERENCES users(id);`);
 }
 
 export const db = drizzle(sqlite);

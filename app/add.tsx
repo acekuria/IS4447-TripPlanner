@@ -1,6 +1,7 @@
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { useAuth } from '@/contexts/auth';
 import { useTheme } from '@/contexts/theme';
 import { db } from '@/db/client';
 import { getCategories, getHabits, setHabitTarget } from '@/db/queries';
@@ -19,6 +20,7 @@ export default function AddHabit() {
   const router = useRouter();
   const context = useContext(HabitContext);
   const { colors } = useTheme();
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -46,7 +48,7 @@ export default function AddHabit() {
 
     const [inserted] = await db
       .insert(habitsTable)
-      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, notes: notes.trim() || null, count: 0 })
+      .values({ name: name.trim(), categoryId: selectedCategoryId, frequency, logType, notes: notes.trim() || null, count: 0, userId: user?.id ?? null })
       .returning({ id: habitsTable.id });
 
     const parsedTarget = parseInt(goalTarget, 10);

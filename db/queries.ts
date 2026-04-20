@@ -2,6 +2,11 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db, sqlite } from './client';
 import { categories, habitLogs, habits, targets, users } from './schema';
 
+function getSessionUserId(): number | null {
+  const rows = sqlite.getAllSync<{ user_id: number }>('SELECT user_id FROM sessions WHERE id = 1');
+  return rows[0]?.user_id ?? null;
+}
+
 export type HabitRecord = {
   id: number;
   name: string;
@@ -99,6 +104,9 @@ function calculateStreak(logDates: string[], frequency: string) {
 }
 
 export async function getHabits(): Promise<HabitRecord[]> {
+  const userId = getSessionUserId();
+  if (!userId) return [];
+
   const rows = await db
     .select({
       id: habits.id,
@@ -112,7 +120,8 @@ export async function getHabits(): Promise<HabitRecord[]> {
       count: habits.count,
     })
     .from(habits)
-    .innerJoin(categories, eq(habits.categoryId, categories.id));
+    .innerJoin(categories, eq(habits.categoryId, categories.id))
+    .where(eq(habits.userId, userId));
 
   const logs = await db
     .select({
@@ -184,12 +193,16 @@ export async function getHabits(): Promise<HabitRecord[]> {
 }
 
 export async function getCategories() {
-  return db.select().from(categories);
+  const userId = getSessionUserId();
+  if (!userId) return [];
+  return db.select().from(categories).where(eq(categories.userId, userId));
 }
 
 export async function getCategoriesWithCount() {
-  const cats = await db.select().from(categories);
-  const habitRows = await db.select({ categoryId: habits.categoryId }).from(habits);
+  const userId = getSessionUserId();
+  if (!userId) return [];
+  const cats = await db.select().from(categories).where(eq(categories.userId, userId));
+  const habitRows = await db.select({ categoryId: habits.categoryId }).from(habits).where(eq(habits.userId, userId));
 
   const countMap = new Map<number, number>();
   for (const h of habitRows) {
@@ -200,7 +213,9 @@ export async function getCategoriesWithCount() {
 }
 
 export async function createCategory(name: string, color: string) {
-  await db.insert(categories).values({ name, color });
+  const userId = getSessionUserId();
+  if (!userId) return;
+  await db.insert(categories).values({ name, color, userId });
 }
 
 export async function updateCategory(id: number, name: string, color: string) {
@@ -208,7 +223,10 @@ export async function updateCategory(id: number, name: string, color: string) {
 }
 
 export async function deleteCategory(id: number): Promise<{ success: boolean; reason?: string }> {
-  const linked = await db.select({ id: habits.id }).from(habits).where(eq(habits.categoryId, id));
+  const userId = getSessionUserId();
+  const linked = await db.select({ id: habits.id }).from(habits).where(
+    and(eq(habits.categoryId, id), userId ? eq(habits.userId, userId) : eq(habits.categoryId, id))
+  );
   if (linked.length > 0) {
     return { success: false, reason: `${linked.length} habit${linked.length === 1 ? '' : 's'} still use this category` };
   }
@@ -308,6 +326,9 @@ export type InsightsData = {
 };
 
 export async function getInsightsData(): Promise<InsightsData> {
+  const userId = getSessionUserId();
+  if (!userId) return { totalHabits: 0, weeklyCompletionRate: 0, bestStreak: 0, dailyTotals: [], categoryBreakdown: [], topStreaks: [] };
+
   const habitRows = await db
     .select({
       id: habits.id,
@@ -318,7 +339,8 @@ export async function getInsightsData(): Promise<InsightsData> {
       categoryColor: categories.color,
     })
     .from(habits)
-    .innerJoin(categories, eq(habits.categoryId, categories.id));
+    .innerJoin(categories, eq(habits.categoryId, categories.id))
+    .where(eq(habits.userId, userId));
 
   const allLogs = await db
     .select({ habitId: habitLogs.habitId, date: habitLogs.date, value: habitLogs.value })
@@ -488,5 +510,12 @@ export function logoutUser() {
 
 export async function deleteUser(id: number) {
   logoutUser();
+  // delete the user's habits (and cascade to habit_logs + targets via FK)
+  const userHabits = await db.select({ id: habits.id }).from(habits).where(eq(habits.userId, id));
+  for (const h of userHabits) {
+    sqlite.execSync(`DELETE FROM habit_logs WHERE habit_id = ${h.id}`);
+    sqlite.execSync(`DELETE FROM targets WHERE habit_id = ${h.id}`);
+  }
+  await db.delete(habits).where(eq(habits.userId, id));
   await db.delete(users).where(eq(users.id, id));
 }

@@ -4,8 +4,9 @@ import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core
 
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey(),
-  name: text('name').notNull().unique(),
+  name: text('name').notNull(),
   color: text('color').notNull(),
+  userId: integer('user_id').references(() => users.id),
 });
 
 export const habits = sqliteTable('habits', {
@@ -18,6 +19,7 @@ export const habits = sqliteTable('habits', {
   logType: text('log_type').notNull().default('completion'),
   notes: text('notes'),
   count: integer('count').notNull().default(0),
+  userId: integer('user_id').references(() => users.id),
 });
 
 export const habitLogs = sqliteTable(

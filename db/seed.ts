@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm';
-import { db } from './client';
+import { eq, inArray } from 'drizzle-orm';
+import { db, sqlite } from './client';
 import { categories, habitLogs, habits, targets } from './schema';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -24,9 +24,9 @@ function buildDates(
 // ─── categories ──────────────────────────────────────────────────────────────
 
 const defaultCategories = [
-  { id: 1, name: 'Health', color: '#C8F7DC' },
-  { id: 2, name: 'Learning', color: '#C4DEF6' },
-  { id: 3, name: 'Productivity', color: '#FFD9C4' },
+  { name: 'Health', color: '#C8F7DC' },
+  { name: 'Learning', color: '#C4DEF6' },
+  { name: 'Productivity', color: '#FFD9C4' },
 ];
 
 // ─── habits ──────────────────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ const defaultCategories = [
 const defaultHabits = [
   {
     name: 'Drink Water',
-    categoryId: 1,
+    category: 'Health',
     frequency: 'daily' as const,
     logType: 'count' as const,
     notes: 'Aim for 8 glasses a day',
@@ -42,7 +42,7 @@ const defaultHabits = [
   },
   {
     name: 'Morning Run',
-    categoryId: 1,
+    category: 'Health',
     frequency: 'daily' as const,
     logType: 'completion' as const,
     notes: '20–30 minutes at a comfortable pace',
@@ -50,7 +50,7 @@ const defaultHabits = [
   },
   {
     name: 'Meditate',
-    categoryId: 1,
+    category: 'Health',
     frequency: 'daily' as const,
     logType: 'completion' as const,
     notes: null,
@@ -58,7 +58,7 @@ const defaultHabits = [
   },
   {
     name: 'Read',
-    categoryId: 2,
+    category: 'Learning',
     frequency: 'daily' as const,
     logType: 'completion' as const,
     notes: 'At least 20 pages',
@@ -66,7 +66,7 @@ const defaultHabits = [
   },
   {
     name: 'Online Course',
-    categoryId: 2,
+    category: 'Learning',
     frequency: 'weekly' as const,
     logType: 'completion' as const,
     notes: null,
@@ -74,7 +74,7 @@ const defaultHabits = [
   },
   {
     name: 'Plan the Week',
-    categoryId: 3,
+    category: 'Productivity',
     frequency: 'weekly' as const,
     logType: 'completion' as const,
     notes: 'Sunday evenings — review goals and schedule',
@@ -82,7 +82,7 @@ const defaultHabits = [
   },
   {
     name: 'Deep Work',
-    categoryId: 3,
+    category: 'Productivity',
     frequency: 'daily' as const,
     logType: 'completion' as const,
     notes: '2-hour blocks, no distractions',
@@ -168,26 +168,67 @@ function buildLogs(name: string): LogEntry[] {
 // ─── main seed function ───────────────────────────────────────────────────────
 
 export async function seedHabitsIfEmpty() {
-  // always upsert categories so colour changes in defaultCategories are picked up on next launch
+  const rows = sqlite.getAllSync<{ user_id: number }>('SELECT user_id FROM sessions WHERE id = 1');
+  const userId = rows[0]?.user_id ?? null;
+  if (!userId) return;
+
+  // upsert this user's default categories — UNIQUE(name, user_id) prevents duplicates
   await db
     .insert(categories)
-    .values(defaultCategories)
-    .onConflictDoUpdate({ target: categories.id, set: { color: sql`excluded.color` } });
+    .values(defaultCategories.map((c) => ({ ...c, userId })))
+    .onConflictDoNothing();
 
-  // skip inserting habits and logs if they already exist — we don't want duplicates
-  const existingHabits = await db.select().from(habits);
+  // Build name → id map from this user's categories
+  const userCategories = await db
+    .select({ id: categories.id, name: categories.name })
+    .from(categories)
+    .where(eq(categories.userId, userId));
+  const categoryIdByName = Object.fromEntries(userCategories.map((c) => [c.name, c.id]));
+  const userCategoryIds = new Set(userCategories.map((c) => c.id));
+
+  // Remap any existing habits that point to categories not owned by this user.
+  // This happens when old categories were migrated with user_id = NULL while habits
+  // keep their original category IDs.
+  const existingHabits = await db
+    .select({ id: habits.id, categoryId: habits.categoryId })
+    .from(habits)
+    .where(eq(habits.userId, userId));
+
+  const orphaned = existingHabits.filter((h) => !userCategoryIds.has(h.categoryId));
+  if (orphaned.length > 0) {
+    const oldCatIds = [...new Set(orphaned.map((h) => h.categoryId))];
+    const oldCats = await db
+      .select({ id: categories.id, name: categories.name })
+      .from(categories)
+      .where(inArray(categories.id, oldCatIds));
+    const oldCatNameById = Object.fromEntries(oldCats.map((c) => [c.id, c.name]));
+    for (const habit of orphaned) {
+      const newCatId = categoryIdByName[oldCatNameById[habit.categoryId]];
+      if (newCatId) {
+        await db.update(habits).set({ categoryId: newCatId }).where(eq(habits.id, habit.id));
+      }
+    }
+  }
+
+  // skip if this user already has habits — don't seed twice for the same account
   if (existingHabits.length > 0) {
-    await seedTargets();
+    await seedTargets(userId);
     return;
   }
 
-  await db.insert(habits).values(defaultHabits);
-  await seedTargets();
-  await seedLogs();
+  await db.insert(habits).values(
+    defaultHabits.map(({ category, ...h }) => ({
+      ...h,
+      categoryId: categoryIdByName[category],
+      userId,
+    }))
+  );
+  await seedTargets(userId);
+  await seedLogs(userId);
 }
 
-async function seedTargets() {
-  const allHabits = await db.select({ id: habits.id, name: habits.name }).from(habits);
+async function seedTargets(userId: number) {
+  const allHabits = await db.select({ id: habits.id, name: habits.name }).from(habits).where(eq(habits.userId, userId));
   for (const habit of allHabits) {
     const target = habitTargets[habit.name];
     if (!target) continue;
@@ -198,8 +239,8 @@ async function seedTargets() {
   }
 }
 
-async function seedLogs() {
-  const allHabits = await db.select({ id: habits.id, name: habits.name }).from(habits);
+async function seedLogs(userId: number) {
+  const allHabits = await db.select({ id: habits.id, name: habits.name }).from(habits).where(eq(habits.userId, userId));
   for (const habit of allHabits) {
     const logs = buildLogs(habit.name);
     if (logs.length === 0) continue;
