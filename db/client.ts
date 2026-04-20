@@ -102,4 +102,14 @@ if (!habitColumns.some((c) => c.name === 'user_id')) {
   sqlite.execSync(`ALTER TABLE habits ADD COLUMN user_id INTEGER REFERENCES users(id);`);
 }
 
+sqlite.execSync(`
+  CREATE TABLE IF NOT EXISTS notification_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    hour INTEGER NOT NULL DEFAULT 20,
+    minute INTEGER NOT NULL DEFAULT 0
+  );
+`);
+
 export const db = drizzle(sqlite);

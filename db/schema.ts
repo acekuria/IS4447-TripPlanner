@@ -45,6 +45,14 @@ export const users = sqliteTable('users', {
   createdAt: text('created_at').notNull(),
 });
 
+export const notificationSettings = sqliteTable('notification_settings', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  enabled: integer('enabled').notNull().default(1),
+  hour: integer('hour').notNull().default(20),
+  minute: integer('minute').notNull().default(0),
+});
+
 export const targets = sqliteTable('targets', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   habitId: integer('habit_id')

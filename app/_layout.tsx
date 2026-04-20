@@ -1,7 +1,8 @@
 import { AuthProvider, useAuth } from '@/contexts/auth';
 import { ThemeProvider } from '@/contexts/theme';
-import { getHabits, HabitRecord } from '@/db/queries';
+import { getHabits, getNotificationSettings, HabitRecord } from '@/db/queries';
 import { seedHabitsIfEmpty } from '@/db/seed';
+import { cancelAllReminders, requestNotificationPermission, scheduleDailyReminder } from '@/utils/notifications';
 import { useRouter, useSegments, Stack } from 'expo-router';
 import { createContext, useEffect, useState } from 'react';
 
@@ -41,11 +42,21 @@ function AppNavigator() {
 
   useEffect(() => {
     if (!user) return;
-    // seed runs on first launch to give the app some demo data
     const load = async () => {
       await seedHabitsIfEmpty();
       const rows = await getHabits();
       setHabits(rows);
+
+      // Restore scheduled notification from saved settings
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        const settings = await getNotificationSettings();
+        if (settings.enabled) {
+          await scheduleDailyReminder(settings.hour, settings.minute);
+        } else {
+          await cancelAllReminders();
+        }
+      }
     };
     void load();
   }, [user]);

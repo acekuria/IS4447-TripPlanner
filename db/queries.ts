@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { db, sqlite } from './client';
-import { categories, habitLogs, habits, targets, users } from './schema';
+import { categories, habitLogs, habits, notificationSettings, targets, users } from './schema';
 
 function getSessionUserId(): number | null {
   const rows = sqlite.getAllSync<{ user_id: number }>('SELECT user_id FROM sessions WHERE id = 1');
@@ -506,6 +506,28 @@ export async function getSessionUser(): Promise<AuthUser | null> {
 
 export function logoutUser() {
   sqlite.execSync('DELETE FROM sessions WHERE id = 1');
+}
+
+export type NotificationSettingsRecord = { enabled: boolean; hour: number; minute: number };
+
+export async function getNotificationSettings(): Promise<NotificationSettingsRecord> {
+  const userId = getSessionUserId();
+  if (!userId) return { enabled: false, hour: 20, minute: 0 };
+  const rows = await db.select().from(notificationSettings).where(eq(notificationSettings.userId, userId));
+  if (rows.length === 0) return { enabled: false, hour: 20, minute: 0 };
+  return { enabled: rows[0].enabled === 1, hour: rows[0].hour, minute: rows[0].minute };
+}
+
+export async function saveNotificationSettings(enabled: boolean, hour: number, minute: number): Promise<void> {
+  const userId = getSessionUserId();
+  if (!userId) return;
+  await db
+    .insert(notificationSettings)
+    .values({ userId, enabled: enabled ? 1 : 0, hour, minute })
+    .onConflictDoUpdate({
+      target: notificationSettings.userId,
+      set: { enabled: enabled ? 1 : 0, hour, minute },
+    });
 }
 
 export async function getExportData(): Promise<{ habit: string; category: string; frequency: string; logType: string; date: string; value: number }[]> {
