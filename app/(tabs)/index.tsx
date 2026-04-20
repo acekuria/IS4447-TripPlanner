@@ -9,7 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useRouter } from 'expo-router';
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { fetchMotivationalQuote, Quote } from '@/utils/quotes';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -33,6 +34,24 @@ export default function IndexScreen() {
   const [selectedFrequency, setSelectedFrequency] = useState('All');
   const [selectedDateRange, setSelectedDateRange] = useState('All time');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(true);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+
+  const loadQuote = useCallback(async () => {
+    setQuoteLoading(true);
+    setQuoteError(null);
+    try {
+      const q = await fetchMotivationalQuote();
+      setQuote(q);
+    } catch (e) {
+      setQuoteError(String(e));
+    } finally {
+      setQuoteLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void loadQuote(); }, [loadQuote]);
 
   useDrizzleStudio(sqlite);
 
@@ -152,6 +171,21 @@ export default function IndexScreen() {
     chipSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
     chipText: { color: colors.text, fontSize: 13, fontWeight: '500' },
     chipTextSelected: { color: colors.primary, fontWeight: '600' },
+    quoteCard: {
+      backgroundColor: colors.primaryLight,
+      borderColor: colors.primaryBorder,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 14,
+      padding: 16,
+    },
+    quoteCardHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    quoteLabel: { color: colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' },
+    quoteText: { color: colors.textStrong, fontSize: 14, fontStyle: 'italic', lineHeight: 20 },
+    quoteAuthor: { color: colors.textMuted, fontSize: 12, marginTop: 8 },
+    quoteSkeleton: { backgroundColor: colors.border, borderRadius: 4, height: 14, marginBottom: 6, width: '90%' },
+    quoteSkeletonShort: { backgroundColor: colors.border, borderRadius: 4, height: 14, width: '60%' },
+    quoteErrorText: { color: colors.textMuted, fontSize: 13 },
     doneBtn: {
       alignItems: 'center',
       backgroundColor: colors.primary,
@@ -192,6 +226,30 @@ export default function IndexScreen() {
             </View>
           )}
         </Pressable>
+      </View>
+
+      <View style={styles.quoteCard}>
+        <View style={styles.quoteCardHeader}>
+          <Text style={styles.quoteLabel}>Daily motivation</Text>
+          <Pressable onPress={loadQuote} accessibilityRole="button" accessibilityLabel="Refresh quote">
+            <Ionicons name="refresh-outline" size={16} color={colors.primary} />
+          </Pressable>
+        </View>
+        {quoteLoading ? (
+          <>
+            <View style={styles.quoteSkeleton} />
+            <View style={styles.quoteSkeletonShort} />
+          </>
+        ) : quoteError ? (
+          <Pressable onPress={loadQuote} accessibilityRole="button">
+            <Text style={styles.quoteErrorText}>Could not load quote. Tap to retry.</Text>
+          </Pressable>
+        ) : (
+          <>
+            <Text style={styles.quoteText}>"{quote?.quote}"</Text>
+            <Text style={styles.quoteAuthor}>— {quote?.author}</Text>
+          </>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.listContent}>
