@@ -90,7 +90,15 @@ export default function HabitDetail() {
       textTransform: 'uppercase',
     },
     notesText: { color: colors.textLabel, fontSize: 14, lineHeight: 20 },
-    buttonSpacing: { marginTop: 10 },
+    dangerZone: { borderTopColor: colors.divider, borderTopWidth: 1, marginTop: 24, paddingTop: 20 },
+    dangerTitle: {
+      color: colors.danger,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 12,
+      textTransform: 'uppercase',
+    },
     goalSection: {
       backgroundColor: colors.card,
       borderColor: colors.border,
@@ -132,7 +140,15 @@ export default function HabitDetail() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title={habit.name} onBack={() => router.back()} />
+        <ScreenHeader
+          title={habit.name}
+          onBack={() => router.back()}
+          rightAction={{
+            icon: 'pencil-outline',
+            label: 'Edit habit',
+            onPress: () => router.push({ pathname: '../habit/[id]/edit', params: { id } }),
+          }}
+        />
         <View style={styles.tags}>
           <InfoTag label="Category" value={habit.categoryName} accentColor={habit.categoryColor} />
           <InfoTag label="Frequency" value={habit.frequency} />
@@ -178,21 +194,10 @@ export default function HabitDetail() {
         )}
 
         <PrimaryButton
-          label={habit.completedToday ? 'Done today' : 'Mark as done today'}
-          variant={habit.completedToday ? 'secondary' : 'primary'}
+          label={habit.completedToday ? '✓ Completed today' : 'Mark as done today'}
+          variant={habit.completedToday ? 'success' : 'primary'}
           onPress={() => { void toggleToday(); }}
         />
-
-        <View style={styles.buttonSpacing}>
-          <PrimaryButton
-            label="Edit"
-            onPress={() => router.push({ pathname: '../habit/[id]/edit', params: { id } })}
-          />
-        </View>
-
-        <View style={styles.buttonSpacing}>
-          <PrimaryButton label="Delete" variant="danger" onPress={() => { void deleteHabit(); }} />
-        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Activity</Text>
@@ -207,6 +212,11 @@ export default function HabitDetail() {
               </View>
             ))
           )}
+        </View>
+
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerTitle}>Danger zone</Text>
+          <PrimaryButton label="Delete habit" variant="danger" onPress={() => { void deleteHabit(); }} />
         </View>
       </ScrollView>
     </SafeAreaView>
