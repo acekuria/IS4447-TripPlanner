@@ -177,6 +177,7 @@ export default function IndexScreen() {
       borderRadius: 14,
       borderWidth: 1,
       marginBottom: 14,
+      marginTop: 14,
       padding: 16,
     },
     quoteCardHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
@@ -198,7 +199,7 @@ export default function IndexScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScreenHeader title="Habits" subtitle={`${habits.length} tracked`} />
+      <ScreenHeader title="Habits" subtitle={`${habits.filter((h) => h.completedToday).length}/${habits.length} done today`} icon="checkmark-circle-outline" />
       <PrimaryButton label="Add Habit" onPress={() => router.push({ pathname: '../add' })} />
 
       <View style={styles.searchRow}>
@@ -290,7 +291,7 @@ export default function IndexScreen() {
           </View>
 
           <FilterGroup label="Category" colors={colors}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            <View style={styles.chipRow}>
               {categoryOptions.map((opt) => (
                 <Pressable
                   key={opt}
@@ -302,7 +303,7 @@ export default function IndexScreen() {
                   <Text style={[styles.chipText, selectedCategory === opt && styles.chipTextSelected]}>{opt}</Text>
                 </Pressable>
               ))}
-            </ScrollView>
+            </View>
           </FilterGroup>
 
           <FilterGroup label="Frequency" colors={colors}>

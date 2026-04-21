@@ -1,6 +1,7 @@
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { midtoneColor } from '@/constants/theme';
 import { useTheme } from '@/contexts/theme';
 import { db } from '@/db/client';
 import { deleteHabitTarget, getCategories, getHabits, setHabitTarget } from '@/db/queries';
@@ -8,7 +9,7 @@ import { habits as habitsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Category, Habit, HabitContext } from '../../_layout';
 
@@ -71,8 +72,18 @@ export default function EditHabit() {
   };
 
   const styles = StyleSheet.create({
-    safeArea: { backgroundColor: colors.bg, flex: 1, padding: 20 },
+    safeArea: { backgroundColor: colors.bg, flex: 1 },
+    scrollContent: { padding: 20, paddingBottom: 40 },
     form: { marginBottom: 6 },
+    sectionHeader: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      marginBottom: 12,
+      marginTop: 20,
+      textTransform: 'uppercase',
+    },
     label: { color: colors.textLabel, fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 4 },
     optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
     optionButton: {
@@ -106,14 +117,18 @@ export default function EditHabit() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <ScreenHeader title="Edit Habit" subtitle={`Update ${habit.name}`} onBack={() => router.back()} />
       <View style={styles.form}>
         <FormField label="Habit Name" value={name} onChangeText={setName} />
+
+        <Text style={styles.sectionHeader}>Organisation</Text>
 
         <Text style={styles.label}>Category</Text>
         <View style={styles.optionRow}>
           {categories.map((category) => {
             const isSelected = selectedCategoryId === category.id;
+            const accent = midtoneColor(category.color);
             return (
               <Pressable
                 key={category.id}
@@ -122,12 +137,12 @@ export default function EditHabit() {
                 onPress={() => setSelectedCategoryId(category.id)}
                 style={[
                   styles.optionButton,
-                  { borderColor: category.color },
-                  isSelected && [styles.categoryOptionSelected, { backgroundColor: category.color }],
+                  { borderColor: accent },
+                  isSelected && [styles.categoryOptionSelected, { backgroundColor: accent }],
                 ]}
               >
-                <View style={[styles.colorSwatch, { backgroundColor: category.color }]} />
-                <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                <View style={[styles.colorSwatch, { backgroundColor: accent }]} />
+                <Text style={[styles.optionButtonText, isSelected && { color: '#fff' }]}>
                   {category.name}
                 </Text>
               </Pressable>
@@ -155,7 +170,7 @@ export default function EditHabit() {
           })}
         </View>
 
-        <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="e.g. tips, reminders, context" />
+        <Text style={styles.sectionHeader}>Tracking</Text>
 
         <Text style={styles.label}>Logging</Text>
         <View style={styles.optionRow}>
@@ -205,12 +220,17 @@ export default function EditHabit() {
           onChangeText={setGoalTarget}
           style={styles.input}
         />
+
+        <Text style={styles.sectionHeader}>Details</Text>
+
+        <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="e.g. tips, reminders, context" />
       </View>
 
       <PrimaryButton label="Save Changes" onPress={saveChanges} />
       <View style={styles.buttonSpacing}>
         <PrimaryButton label="Cancel" variant="secondary" onPress={() => router.back()} />
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

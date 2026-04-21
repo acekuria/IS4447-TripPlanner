@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 type Props = {
   title: string;
   subtitle?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
   onBack?: () => void;
   rightAction?: {
     icon: keyof typeof Ionicons.glyphMap;
@@ -13,7 +14,7 @@ type Props = {
   };
 };
 
-export default function ScreenHeader({ title, subtitle, onBack, rightAction }: Props) {
+export default function ScreenHeader({ title, subtitle, icon, onBack, rightAction }: Props) {
   const { colors } = useTheme();
   const styles = StyleSheet.create({
     container: { marginBottom: 16 },
@@ -23,6 +24,15 @@ export default function ScreenHeader({ title, subtitle, onBack, rightAction }: P
     backLabel: { color: colors.primary, fontSize: 15, fontWeight: '600' },
     titleRow: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between' },
     titleContent: { flex: 1 },
+    titleLine: { alignItems: 'center', flexDirection: 'row', gap: 10 },
+    iconBadge: {
+      alignItems: 'center',
+      backgroundColor: colors.primaryLight,
+      borderRadius: 10,
+      height: 36,
+      justifyContent: 'center',
+      width: 36,
+    },
     title: { color: colors.text, fontSize: 28, fontWeight: '700' },
     subtitle: { color: colors.textMuted, fontSize: 14, marginTop: 4 },
     rightActionBtn: { marginTop: 4, padding: 4 },
@@ -44,7 +54,14 @@ export default function ScreenHeader({ title, subtitle, onBack, rightAction }: P
       ) : null}
       <View style={styles.titleRow}>
         <View style={styles.titleContent}>
-          <Text style={styles.title}>{title}</Text>
+          <View style={styles.titleLine}>
+            {icon ? (
+              <View style={styles.iconBadge}>
+                <Ionicons name={icon} size={20} color={colors.primary} />
+              </View>
+            ) : null}
+            <Text style={styles.title}>{title}</Text>
+          </View>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
         {rightAction ? (

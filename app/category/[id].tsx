@@ -3,10 +3,10 @@ import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { midtoneColor, PASTEL_BG_LIST } from '@/constants/theme';
 import { useTheme } from '@/contexts/theme';
-import { getCategories, updateCategory } from '@/db/queries';
+import { deleteCategory, getCategories, updateCategory } from '@/db/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PRESET_COLORS = PASTEL_BG_LIST;
@@ -17,6 +17,7 @@ export default function EditCategory() {
   const { colors } = useTheme();
   const [name, setName] = useState('');
   const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [habitCount, setHabitCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -34,6 +35,28 @@ export default function EditCategory() {
     if (!name.trim()) return;
     await updateCategory(Number(id), name.trim(), color);
     router.back();
+  };
+
+  const handleDelete = () => {
+    if (habitCount > 0) {
+      Alert.alert('Cannot delete', `${name} has ${habitCount} habit${habitCount === 1 ? '' : 's'} assigned. Reassign or delete them first.`);
+      return;
+    }
+    Alert.alert('Delete category', `Delete "${name}"? This cannot be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const result = await deleteCategory(Number(id));
+          if (result.success) {
+            router.back();
+          } else {
+            Alert.alert('Cannot delete', result.reason ?? 'This category is in use.');
+          }
+        },
+      },
+    ]);
   };
 
   const styles = StyleSheet.create({
@@ -57,6 +80,15 @@ export default function EditCategory() {
     previewSwatch: { borderRadius: 999, height: 32, width: 32 },
     previewName: { color: colors.textStrong, fontSize: 16, fontWeight: '600' },
     cancel: { marginTop: 10 },
+    dangerZone: { borderTopColor: colors.divider, borderTopWidth: 1, marginTop: 24, paddingTop: 20 },
+    dangerTitle: {
+      color: colors.danger,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      marginBottom: 12,
+      textTransform: 'uppercase',
+    },
   });
 
   return (
@@ -90,6 +122,11 @@ export default function EditCategory() {
         <PrimaryButton label="Save Changes" onPress={save} />
         <View style={styles.cancel}>
           <PrimaryButton label="Cancel" variant="secondary" onPress={() => router.back()} />
+        </View>
+
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerTitle}>Danger zone</Text>
+          <PrimaryButton label="Delete category" variant="danger" onPress={handleDelete} />
         </View>
       </ScrollView>
     </SafeAreaView>

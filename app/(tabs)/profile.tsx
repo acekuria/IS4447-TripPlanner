@@ -5,7 +5,6 @@ import { useTheme } from '@/contexts/theme';
 import { getExportData, getNotificationSettings, saveNotificationSettings } from '@/db/queries';
 import { cancelAllReminders, formatTime, requestNotificationPermission, scheduleDailyReminder } from '@/utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useState } from 'react';
@@ -125,8 +124,6 @@ export default function ProfileScreen() {
 
   const styles = StyleSheet.create({
     safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 18, paddingTop: 10 },
-    headerRow: { alignItems: 'flex-start', marginBottom: 8 },
-    headerLogo: { height: 28, width: 120 },
     avatarRow: { alignItems: 'center', flexDirection: 'row', gap: 16, marginBottom: 28, marginTop: 8 },
     avatar: {
       alignItems: 'center',
@@ -197,14 +194,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.headerRow}>
-          <Image
-            source={isDark ? require('@/assets/images/logo-dark.svg') : require('@/assets/images/logo.svg')}
-            style={styles.headerLogo}
-            contentFit="contain"
-          />
-        </View>
-        <ScreenHeader title="Profile" />
+        <ScreenHeader title="Profile" icon="person-circle-outline" />
 
         <View style={styles.avatarRow}>
           <View style={styles.avatar}>

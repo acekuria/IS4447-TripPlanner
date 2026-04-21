@@ -1,6 +1,7 @@
 import FormField from '@/components/ui/form-field';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
+import { midtoneColor } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth';
 import { useTheme } from '@/contexts/theme';
 import { db } from '@/db/client';
@@ -62,8 +63,18 @@ export default function AddHabit() {
   };
 
   const styles = StyleSheet.create({
-    safeArea: { backgroundColor: colors.bg, flex: 1, padding: 20 },
+    safeArea: { backgroundColor: colors.bg, flex: 1 },
+    scrollContent: { padding: 20, paddingBottom: 40 },
     form: { marginBottom: 6 },
+    sectionHeader: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      marginBottom: 12,
+      marginTop: 20,
+      textTransform: 'uppercase',
+    },
     label: { color: colors.textLabel, fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 4 },
     optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
     optionButton: {
@@ -82,7 +93,6 @@ export default function AddHabit() {
     optionButtonTextSelected: { color: colors.selectedText },
     colorSwatch: { borderRadius: 999, height: 10, marginRight: 8, width: 10 },
     backButton: { marginTop: 10 },
-    content: {},
     input: {
       backgroundColor: colors.inputBg,
       borderColor: colors.inputBorder,
@@ -98,15 +108,18 @@ export default function AddHabit() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Add Habit" subtitle="Create a new habit to track." onBack={() => router.back()} />
         <View style={styles.form}>
           <FormField label="Habit Name" value={name} onChangeText={setName} />
+
+          <Text style={styles.sectionHeader}>Organisation</Text>
 
           <Text style={styles.label}>Category</Text>
           <View style={styles.optionRow}>
             {categories.map((category) => {
               const isSelected = selectedCategoryId === category.id;
+              const accent = midtoneColor(category.color);
               return (
                 <Pressable
                   key={category.id}
@@ -115,12 +128,12 @@ export default function AddHabit() {
                   onPress={() => setSelectedCategoryId(category.id)}
                   style={[
                     styles.optionButton,
-                    { borderColor: category.color },
-                    isSelected && [styles.categoryOptionSelected, { backgroundColor: category.color }],
+                    { borderColor: accent },
+                    isSelected && [styles.categoryOptionSelected, { backgroundColor: accent }],
                   ]}
                 >
-                  <View style={[styles.colorSwatch, { backgroundColor: category.color }]} />
-                  <Text style={[styles.optionButtonText, isSelected && styles.optionButtonTextSelected]}>
+                  <View style={[styles.colorSwatch, { backgroundColor: accent }]} />
+                  <Text style={[styles.optionButtonText, isSelected && { color: '#fff' }]}>
                     {category.name}
                   </Text>
                 </Pressable>
@@ -148,7 +161,7 @@ export default function AddHabit() {
             })}
           </View>
 
-          <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="e.g. tips, reminders, context" />
+          <Text style={styles.sectionHeader}>Tracking</Text>
 
           <Text style={styles.label}>Logging</Text>
           <View style={styles.optionRow}>
@@ -198,6 +211,10 @@ export default function AddHabit() {
             onChangeText={setGoalTarget}
             style={styles.input}
           />
+
+          <Text style={styles.sectionHeader}>Details</Text>
+
+          <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="e.g. tips, reminders, context" />
         </View>
         <PrimaryButton label="Save Habit" onPress={saveHabit} />
         <View style={styles.backButton}>

@@ -3,10 +3,11 @@ import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';
 import { midtoneColor } from '@/constants/theme';
 import { useTheme } from '@/contexts/theme';
-import { deleteCategory, getCategoriesWithCount } from '@/db/queries';
+import { getCategoriesWithCount } from '@/db/queries';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -28,27 +29,6 @@ export default function CategoriesScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-
-  const handleDelete = (cat: CategoryWithCount) => {
-    if (cat.habitCount > 0) {
-      Alert.alert(
-        'Cannot delete',
-        `${cat.name} has ${cat.habitCount} habit${cat.habitCount === 1 ? '' : 's'} assigned. Reassign or delete them first.`
-      );
-      return;
-    }
-    Alert.alert('Delete category', `Delete "${cat.name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteCategory(cat.id);
-          void load();
-        },
-      },
-    ]);
-  };
 
   const styles = StyleSheet.create({
     safeArea: { backgroundColor: colors.bg, flex: 1, paddingHorizontal: 18, paddingTop: 10 },
@@ -77,7 +57,7 @@ export default function CategoriesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScreenHeader title="Categories" subtitle={`${categories.length} categories`} />
+      <ScreenHeader title="Categories" subtitle={`${categories.length} categories`} icon="folder-outline" />
       <PrimaryButton label="Add Category" onPress={() => router.push('/category/add')} />
       <ScrollView contentContainerStyle={styles.list}>
         {categories.length === 0 ? (
@@ -90,7 +70,7 @@ export default function CategoriesScreen() {
           />
         ) : (
           categories.map((cat) => (
-            <View key={cat.id} style={styles.card}>
+            <View key={cat.id} style={[styles.card, { borderLeftColor: midtoneColor(cat.color), borderLeftWidth: 4 }]}>
               <View style={styles.left}>
                 <View style={[styles.swatch, { backgroundColor: midtoneColor(cat.color) }]} />
                 <View>
@@ -107,17 +87,7 @@ export default function CategoriesScreen() {
                   accessibilityLabel={`Edit ${cat.name}`}
                   style={styles.actionButton}
                 >
-                  <Text style={styles.editText}>Edit</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleDelete(cat)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Delete ${cat.name}`}
-                  style={styles.actionButton}
-                >
-                  <Text style={[styles.deleteText, cat.habitCount > 0 && styles.deleteDisabled]}>
-                    Delete
-                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                 </Pressable>
               </View>
             </View>

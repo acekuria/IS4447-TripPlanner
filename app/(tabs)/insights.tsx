@@ -34,6 +34,7 @@ export default function InsightsScreen() {
     },
     statValue: { color: colors.textStrong, fontSize: 22, fontWeight: '700' },
     statLabel: { color: colors.textSubdued, fontSize: 12, marginTop: 2 },
+    statSubValue: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
     sectionTitle: {
       color: colors.textLabel,
       fontSize: 13,
@@ -64,6 +65,7 @@ export default function InsightsScreen() {
     barFill: { borderRadius: 4, width: '100%' },
     barLabel: { color: colors.textMuted, fontSize: 10, marginTop: 6 },
     barLabelToday: { color: colors.primary, fontWeight: '600' },
+    barDateNumber: { color: colors.textMuted, fontSize: 9, marginTop: 2 },
     breakdownCard: {
       backgroundColor: colors.card,
       borderColor: colors.border,
@@ -101,7 +103,7 @@ export default function InsightsScreen() {
   if (!data) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ScreenHeader title="Insights" />
+        <ScreenHeader title="Insights" icon="bar-chart-outline" />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.teal} />
         </View>
@@ -112,7 +114,7 @@ export default function InsightsScreen() {
   if (data.totalHabits === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ScreenHeader title="Insights" />
+        <ScreenHeader title="Insights" icon="bar-chart-outline" />
         <EmptyState
           icon="bar-chart-outline"
           title="No data yet"
@@ -127,11 +129,16 @@ export default function InsightsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Insights" />
+        <ScreenHeader title="Insights" icon="bar-chart-outline" />
 
         <View style={styles.statsRow}>
           <StatCard label="Habits" value={String(data.totalHabits)} styles={styles} />
-          <StatCard label="This week" value={`${data.weeklyCompletionRate}%`} accent="#22C55E" styles={styles} />
+          <StatCard
+            label="Completed habits"
+            value={`${data.weeklyCompletionRate}%`}
+            accent="#22C55E"
+            styles={styles}
+          />
           <StatCard label="Best streak" value={String(data.bestStreak)} accent="#3B82F6" styles={styles} />
         </View>
 
@@ -151,9 +158,16 @@ export default function InsightsScreen() {
                       ]}
                     />
                   </View>
-                  <Text style={[styles.barLabel, day.label === 'Today' && styles.barLabelToday]}>
-                    {day.label}
-                  </Text>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={[styles.barLabel, day.label === 'Today' && styles.barLabelToday]}>
+                      {day.label}
+                    </Text>
+                    {day.label !== 'Today' && (
+                      <Text style={styles.barDateNumber}>
+                        {new Date(day.date).getDate()}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               );
             })}
@@ -209,10 +223,11 @@ export default function InsightsScreen() {
   );
 }
 
-function StatCard({ label, value, accent, styles }: { label: string; value: string; accent?: string; styles: any }) {
+function StatCard({ label, value, subValue, accent, styles }: { label: string; value: string; subValue?: string; accent?: string; styles: any }) {
   return (
     <View style={styles.statCard}>
       <Text style={[styles.statValue, accent ? { color: accent } : undefined]}>{value}</Text>
+      {subValue ? <Text style={styles.statSubValue}>{subValue}</Text> : null}
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );

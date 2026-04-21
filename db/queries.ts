@@ -314,6 +314,8 @@ export async function decrementHabitCount(habitId: number) {
 export type InsightsData = {
   totalHabits: number;
   weeklyCompletionRate: number;
+  weeklyCompleted: number;
+  weeklyPossible: number;
   bestStreak: number;
   dailyTotals: Array<{ date: string; label: string; count: number }>;
   categoryBreakdown: Array<{
@@ -327,7 +329,7 @@ export type InsightsData = {
 
 export async function getInsightsData(): Promise<InsightsData> {
   const userId = getSessionUserId();
-  if (!userId) return { totalHabits: 0, weeklyCompletionRate: 0, bestStreak: 0, dailyTotals: [], categoryBreakdown: [], topStreaks: [] };
+  if (!userId) return { totalHabits: 0, weeklyCompletionRate: 0, weeklyCompleted: 0, weeklyPossible: 0, bestStreak: 0, dailyTotals: [], categoryBreakdown: [], topStreaks: [] };
 
   const habitRows = await db
     .select({
@@ -422,6 +424,8 @@ export async function getInsightsData(): Promise<InsightsData> {
   return {
     totalHabits: habitRows.length,
     weeklyCompletionRate,
+    weeklyCompleted: completed,
+    weeklyPossible: possible,
     bestStreak,
     dailyTotals,
     categoryBreakdown,
