@@ -1,4 +1,4 @@
-import HabitCard from '@/components/StudentCard';
+import HabitCard from '@/components/HabitCard';
 import EmptyState from '@/components/ui/empty-state';
 import PrimaryButton from '@/components/ui/primary-button';
 import ScreenHeader from '@/components/ui/screen-header';

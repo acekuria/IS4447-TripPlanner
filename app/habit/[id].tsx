@@ -186,7 +186,7 @@ export default function HabitDetail() {
         <View style={styles.buttonSpacing}>
           <PrimaryButton
             label="Edit"
-            onPress={() => router.push({ pathname: '../student/[id]/edit', params: { id } })}
+            onPress={() => router.push({ pathname: '../habit/[id]/edit', params: { id } })}
           />
         </View>
 

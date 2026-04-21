@@ -31,7 +31,7 @@ export default function HabitCard({ habit }: Props) {
   const { colors } = useTheme();
 
   const openDetails = () =>
-    router.push({ pathname: '/student/[id]', params: { id: habit.id.toString() } });
+    router.push({ pathname: '/habit/[id]', params: { id: habit.id.toString() } });
 
   const refresh = async () => {
     if (!context) return;
