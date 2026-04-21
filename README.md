@@ -1,8 +1,21 @@
-# Welcome to your Expo app 👋
+# IS4447 Habit Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**GitHub Repository:** https://github.com/acekuria/IS4447-habit-tracker
 
-## Get started
+**Expo Link:** exp://192.168.178.28:8081
+
+> Scan the QR code from `npx expo start` in your terminal to open the app in Expo Go.
+
+---
+
+**App Name:** IS4447 Habit Tracker
+**Option:** A
+
+A mobile habit tracking app built with React Native and Expo. Users can create and manage daily and weekly habits, track streaks and progress, view insights, set goals, receive daily reminders, and export their data to CSV.
+
+---
+
+## Setup Instructions
 
 1. Install dependencies
 
@@ -16,35 +29,18 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open the app on your device.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Features
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- User registration and login with per-user data isolation
+- Create, edit, and delete habits with categories
+- Daily and weekly habit tracking with streak calculation
+- Goal setting with weekly and monthly targets
+- Insights dashboard with completion rates and category breakdown
+- Motivational quotes via API Ninjas
+- Daily reminder notifications (local, scheduled)
+- CSV data export
+- Light and dark mode
