@@ -318,6 +318,8 @@ export type InsightsData = {
   weeklyPossible: number;
   bestStreak: number;
   dailyTotals: Array<{ date: string; label: string; count: number }>;
+  weeklyTotals: Array<{ label: string; count: number }>;
+  monthlyTotals: Array<{ label: string; count: number }>;
   categoryBreakdown: Array<{
     name: string;
     color: string;
@@ -329,7 +331,7 @@ export type InsightsData = {
 
 export async function getInsightsData(): Promise<InsightsData> {
   const userId = getSessionUserId();
-  if (!userId) return { totalHabits: 0, weeklyCompletionRate: 0, weeklyCompleted: 0, weeklyPossible: 0, bestStreak: 0, dailyTotals: [], categoryBreakdown: [], topStreaks: [] };
+  if (!userId) return { totalHabits: 0, weeklyCompletionRate: 0, weeklyCompleted: 0, weeklyPossible: 0, bestStreak: 0, dailyTotals: [], weeklyTotals: [], monthlyTotals: [], categoryBreakdown: [], topStreaks: [] };
 
   const habitRows = await db
     .select({
@@ -421,6 +423,33 @@ export async function getInsightsData(): Promise<InsightsData> {
     .sort((a, b) => b.streak - a.streak)
     .slice(0, 5);
 
+  // Weekly totals: last 4 weeks, each chunk is 7 days (oldest → newest)
+  const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const userHabitIds = new Set(habitRows.map((h) => h.id));
+  const userLogs = allLogs.filter((l) => userHabitIds.has(l.habitId));
+
+  const weeklyTotals: Array<{ label: string; count: number }> = [];
+  for (let w = 3; w >= 0; w--) {
+    const chunkEnd = new Date(today);
+    chunkEnd.setDate(chunkEnd.getDate() - w * 7);
+    const chunkStart = new Date(today);
+    chunkStart.setDate(chunkStart.getDate() - (w * 7 + 6));
+    const startStr = formatDateString(chunkStart);
+    const endStr = formatDateString(chunkEnd);
+    const count = userLogs.filter((l) => l.date >= startStr && l.date <= endStr).length;
+    weeklyTotals.push({ label: `${MONTH_LABELS[chunkStart.getMonth()]} ${chunkStart.getDate()}`, count });
+  }
+
+  // Monthly totals: last 3 months (oldest → newest)
+  const monthlyTotals: Array<{ label: string; count: number }> = [];
+  for (let m = 2; m >= 0; m--) {
+    const d = new Date(today);
+    d.setMonth(d.getMonth() - m);
+    const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const count = userLogs.filter((l) => l.date.startsWith(monthStr)).length;
+    monthlyTotals.push({ label: MONTH_LABELS[d.getMonth()], count });
+  }
+
   return {
     totalHabits: habitRows.length,
     weeklyCompletionRate,
@@ -428,6 +457,8 @@ export async function getInsightsData(): Promise<InsightsData> {
     weeklyPossible: possible,
     bestStreak,
     dailyTotals,
+    weeklyTotals,
+    monthlyTotals,
     categoryBreakdown,
     topStreaks,
   };

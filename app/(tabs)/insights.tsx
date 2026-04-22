@@ -5,12 +5,16 @@ import { useTheme } from '@/contexts/theme';
 import { getInsightsData, InsightsData } from '@/db/queries';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+type ChartView = 'Daily' | 'Weekly' | 'Monthly';
+const CHART_VIEWS: ChartView[] = ['Daily', 'Weekly', 'Monthly'];
 
 export default function InsightsScreen() {
   const { colors } = useTheme();
   const [data, setData] = useState<InsightsData | null>(null);
+  const [chartView, setChartView] = useState<ChartView>('Daily');
 
   useFocusEffect(
     useCallback(() => {
@@ -66,6 +70,11 @@ export default function InsightsScreen() {
     barLabel: { color: colors.textMuted, fontSize: 10, marginTop: 6 },
     barLabelToday: { color: colors.primary, fontWeight: '600' },
     barDateNumber: { color: colors.textMuted, fontSize: 9, marginTop: 2 },
+    toggleRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+    toggleChip: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 999, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 7 },
+    toggleChipSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+    toggleChipText: { color: colors.text, fontSize: 13, fontWeight: '500' },
+    toggleChipTextSelected: { color: colors.primary, fontWeight: '600' },
     breakdownCard: {
       backgroundColor: colors.card,
       borderColor: colors.border,
@@ -124,8 +133,6 @@ export default function InsightsScreen() {
     );
   }
 
-  const maxDailyCount = Math.max(...data.dailyTotals.map((d) => d.count), 1);
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -142,35 +149,53 @@ export default function InsightsScreen() {
           <StatCard label="Best streak" value={String(data.bestStreak)} accent="#3B82F6" styles={styles} />
         </View>
 
-        <Text style={styles.sectionTitle}>Daily completions — last 7 days</Text>
+        <View style={styles.toggleRow}>
+          {CHART_VIEWS.map((v) => (
+            <Pressable
+              key={v}
+              onPress={() => setChartView(v)}
+              accessibilityRole="button"
+              accessibilityLabel={`${v} view`}
+              style={[styles.toggleChip, chartView === v && styles.toggleChipSelected]}
+            >
+              <Text style={[styles.toggleChipText, chartView === v && styles.toggleChipTextSelected]}>{v}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.sectionTitle}>
+          {chartView === 'Daily'
+            ? 'Daily completions — last 7 days'
+            : chartView === 'Weekly'
+            ? 'Weekly completions — last 4 weeks'
+            : 'Monthly completions — last 3 months'}
+        </Text>
         <View style={styles.chartCard}>
           <View style={styles.barsContainer}>
-            {data.dailyTotals.map((day) => {
-              const heightPx = Math.round((day.count / maxDailyCount) * 100);
-              return (
-                <View key={day.date} style={styles.barWrapper}>
-                  <Text style={styles.barValue}>{day.count > 0 ? day.count : ''}</Text>
-                  <View style={styles.barTrack}>
-                    <View
-                      style={[
-                        styles.barFill,
-                        { height: heightPx, backgroundColor: day.label === 'Today' ? colors.primary : colors.teal },
-                      ]}
-                    />
+            {(() => {
+              const bars =
+                chartView === 'Daily'
+                  ? data.dailyTotals.map((d) => ({ key: d.date, label: d.label, subLabel: d.label !== 'Today' ? String(new Date(d.date).getDate()) : undefined, count: d.count, highlight: d.label === 'Today' }))
+                  : chartView === 'Weekly'
+                  ? data.weeklyTotals.map((w, i) => ({ key: String(i), label: w.label, subLabel: undefined, count: w.count, highlight: false }))
+                  : data.monthlyTotals.map((m, i) => ({ key: String(i), label: m.label, subLabel: undefined, count: m.count, highlight: false }));
+              const maxCount = Math.max(...bars.map((b) => b.count), 1);
+              return bars.map((bar) => {
+                const heightPx = Math.round((bar.count / maxCount) * 100);
+                return (
+                  <View key={bar.key} style={styles.barWrapper}>
+                    <Text style={styles.barValue}>{bar.count > 0 ? bar.count : ''}</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: heightPx, backgroundColor: bar.highlight ? colors.primary : colors.teal }]} />
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={[styles.barLabel, bar.highlight && styles.barLabelToday]}>{bar.label}</Text>
+                      {bar.subLabel ? <Text style={styles.barDateNumber}>{bar.subLabel}</Text> : null}
+                    </View>
                   </View>
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={[styles.barLabel, day.label === 'Today' && styles.barLabelToday]}>
-                      {day.label}
-                    </Text>
-                    {day.label !== 'Today' && (
-                      <Text style={styles.barDateNumber}>
-                        {new Date(day.date).getDate()}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
+                );
+              });
+            })()}
           </View>
         </View>
 
