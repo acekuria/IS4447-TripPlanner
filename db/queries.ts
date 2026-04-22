@@ -588,13 +588,15 @@ export async function getExportData(): Promise<{ habit: string; category: string
 }
 
 export async function deleteUser(id: number) {
-  logoutUser();
-  // delete the user's habits (and cascade to habit_logs + targets via FK)
+  // Delete in dependency order to satisfy foreign key constraints
   const userHabits = await db.select({ id: habits.id }).from(habits).where(eq(habits.userId, id));
   for (const h of userHabits) {
-    sqlite.execSync(`DELETE FROM habit_logs WHERE habit_id = ${h.id}`);
-    sqlite.execSync(`DELETE FROM targets WHERE habit_id = ${h.id}`);
+    await db.delete(habitLogs).where(eq(habitLogs.habitId, h.id));
+    await db.delete(targets).where(eq(targets.habitId, h.id));
   }
   await db.delete(habits).where(eq(habits.userId, id));
+  await db.delete(categories).where(eq(categories.userId, id));
+  await db.delete(notificationSettings).where(eq(notificationSettings.userId, id));
   await db.delete(users).where(eq(users.id, id));
+  await sqlite.runAsync('DELETE FROM sessions WHERE id = 1');
 }
