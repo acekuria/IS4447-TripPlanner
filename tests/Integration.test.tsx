@@ -26,6 +26,14 @@ jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn(),
 }));
 
+jest.mock('@/utils/quotes', () => ({
+  fetchMotivationalQuote: jest.fn().mockResolvedValue({ quote: 'Keep going.', author: 'Test' }),
+}));
+
+jest.mock('@/db/queries', () => ({
+  getHabits: jest.fn().mockResolvedValue([]),
+}));
+
 // ─── Fixture data ─────────────────────────────────────────────────────────────
 
 import { HabitContext } from '../app/_layout';

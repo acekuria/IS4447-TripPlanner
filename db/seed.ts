@@ -165,6 +165,9 @@ function buildLogs(name: string): LogEntry[] {
   }
 }
 
+// Exported for unit testing — allows tests to verify data integrity without a live DB
+export { defaultCategories as SEED_CATEGORIES, defaultHabits as SEED_HABITS, habitTargets as SEED_HABIT_TARGETS, buildLogs as buildSeedLogs };
+
 // ─── main seed function ───────────────────────────────────────────────────────
 
 export async function seedHabitsIfEmpty() {
