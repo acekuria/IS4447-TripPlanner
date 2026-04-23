@@ -2,7 +2,20 @@
 
 **GitHub Repository:** https://github.com/acekuria/IS4447-habit-tracker
 
-**Expo Link:** https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T16%3A46%3A39.345Z&slug=exp&projectId=bc658a39-1cb1-4871-96b7-34f8db3dbf3d&group=46a3d10f-7f43-46ba-b352-98011bf1e880
+**Expo Links:** 
+
+Update details page URL IOS:
+https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T16%3A46%3A39.345Z&slug=exp&projectId=bc658a39-1cb1-4871-96b7-34f8db3dbf3d&group=46a3d10f-7f43-46ba-b352-98011bf1e880
+
+Update deep link URL IOS:
+exp://u.expo.dev/bc658a39-1cb1-4871-96b7-34f8db3dbf3d/group/46a3d10f-7f43-46ba-b352-98011bf1e880
+
+
+Update details page URL Android:
+https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T16%3A44%3A58.300Z&slug=exp&projectId=bc658a39-1cb1-4871-96b7-34f8db3dbf3d&group=ee0e035c-f2c0-4a3d-b0a7-21d7a474ac03
+
+Update deep link URL Android:
+exp://u.expo.dev/bc658a39-1cb1-4871-96b7-34f8db3dbf3d/group/ee0e035c-f2c0-4a3d-b0a7-21d7a474ac03
 
 > Scan the QR code from `npx expo start` in your terminal to open the app in Expo Go.
 
