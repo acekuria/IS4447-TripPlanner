@@ -75,7 +75,6 @@ function getWeekStart(date: Date) {
 function calculateDailyStreak(logDates: string[]) {
   const logSet = new Set(logDates);
   let streak = 0;
-  // walk backwards from today, counting consecutive days with a log
   let current = parseDateString(getTodayDateString());
 
   while (logSet.has(formatDateString(current))) {
@@ -138,7 +137,7 @@ export async function getHabits(): Promise<HabitRecord[]> {
   const weekEnd = formatDateString(addDays(parseDateString(weekStart), 6));
   const currentMonth = today.slice(0, 7);
 
-  // group all logs by habit id so we don't have to filter the full array repeatedly below
+  // group logs by habit so we can look them up quickly
   const logsByHabit = new Map<number, Array<{ date: string; value: number }>>();
   for (const log of logs) {
     const arr = logsByHabit.get(log.habitId) ?? [];
@@ -212,10 +211,15 @@ export async function getCategoriesWithCount() {
   return cats.map((cat) => ({ ...cat, habitCount: countMap.get(cat.id) ?? 0 }));
 }
 
-export async function createCategory(name: string, color: string) {
+export async function createCategory(name: string, color: string): Promise<{ success: boolean; error?: string }> {
   const userId = getSessionUserId();
-  if (!userId) return;
-  await db.insert(categories).values({ name, color, userId });
+  if (!userId) return { success: false, error: 'Not logged in.' };
+  try {
+    await db.insert(categories).values({ name, color, userId });
+    return { success: true };
+  } catch {
+    return { success: false, error: `A category named "${name}" already exists.` };
+  }
 }
 
 export async function updateCategory(id: number, name: string, color: string) {
@@ -352,7 +356,6 @@ export async function getInsightsData(): Promise<InsightsData> {
 
   const today = parseDateString(getTodayDateString());
 
-  // Build last-7-days date list
   const days: Array<{ date: string; label: string }> = [];
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   for (let i = 6; i >= 0; i--) {
@@ -378,7 +381,6 @@ export async function getInsightsData(): Promise<InsightsData> {
     count: logsByDate.get(d.date) ?? 0,
   }));
 
-  // Weekly completion rate: logged habits / (habits × 7 days) for daily habits this week
   const weekDates = new Set(days.map((d) => d.date));
   const dailyHabits = habitRows.filter((h) => h.frequency === 'daily');
   const possible = dailyHabits.length * 7;
@@ -387,14 +389,12 @@ export async function getInsightsData(): Promise<InsightsData> {
   ).length;
   const weeklyCompletionRate = possible > 0 ? Math.round((completed / possible) * 100) : 0;
 
-  // Best streak across all habits
   const streaks = habitRows.map((h) => {
     const dates = logsByHabit.get(h.id) ?? [];
     return calculateStreak(dates, h.frequency);
   });
   const bestStreak = streaks.length > 0 ? Math.max(...streaks) : 0;
 
-  // Category breakdown: completion days in last 28 days
   const past28 = new Set<string>();
   for (let i = 0; i < 28; i++) {
     const d = new Date(today);
@@ -417,13 +417,11 @@ export async function getInsightsData(): Promise<InsightsData> {
   }
   const categoryBreakdown = Array.from(catMap.values());
 
-  // Top streaks
   const topStreaks = habitRows
     .map((h, i) => ({ name: h.name, streak: streaks[i], color: h.categoryColor }))
     .sort((a, b) => b.streak - a.streak)
     .slice(0, 5);
 
-  // Weekly totals: last 4 weeks, each chunk is 7 days (oldest → newest)
   const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const userHabitIds = new Set(habitRows.map((h) => h.id));
   const userLogs = allLogs.filter((l) => userHabitIds.has(l.habitId));
@@ -440,7 +438,6 @@ export async function getInsightsData(): Promise<InsightsData> {
     weeklyTotals.push({ label: `${MONTH_LABELS[chunkStart.getMonth()]} ${chunkStart.getDate()}`, count });
   }
 
-  // Monthly totals: last 3 months (oldest → newest)
   const monthlyTotals: Array<{ label: string; count: number }> = [];
   for (let m = 2; m >= 0; m--) {
     const d = new Date(today);
@@ -484,8 +481,7 @@ export async function getHabitProgress(habitId: number, frequency: string): Prom
   };
 }
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-// passwords are stored as plain text here — in a real app you'd hash them with bcrypt
+// passwords are plain text for this prototype
 
 export type AuthUser = { id: number; name: string; email: string };
 
@@ -588,7 +584,7 @@ export async function getExportData(): Promise<{ habit: string; category: string
 }
 
 export async function deleteUser(id: number) {
-  // Delete in dependency order to satisfy foreign key constraints
+  // logs and targets reference habits, so delete them first
   const userHabits = await db.select({ id: habits.id }).from(habits).where(eq(habits.userId, id));
   for (const h of userHabits) {
     await db.delete(habitLogs).where(eq(habitLogs.habitId, h.id));

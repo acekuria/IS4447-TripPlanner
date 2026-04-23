@@ -3,7 +3,7 @@ import ScreenHeader from '@/components/ui/screen-header';
 import { useAuth } from '@/contexts/auth';
 import { useTheme } from '@/contexts/theme';
 import { getExportData, getNotificationSettings, saveNotificationSettings } from '@/db/queries';
-import { cancelAllReminders, formatTime, requestNotificationPermission, scheduleDailyReminder } from '@/utils/notifications';
+import { cancelAllReminders, formatTime, requestNotificationPermission, scheduleDailyReminder, sendTestNotification } from '@/utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   const [notifHour, setNotifHour] = useState(20);
   const [notifMinute, setNotifMinute] = useState(0);
   const [savingNotif, setSavingNotif] = useState(false);
+  const [testingSend, setTestingSend] = useState(false);
 
   useEffect(() => {
     getNotificationSettings().then((s) => {
@@ -66,6 +67,18 @@ export default function ProfileScreen() {
     } finally {
       setSavingNotif(false);
     }
+  };
+
+  const handleTestNotification = async () => {
+    const granted = await requestNotificationPermission();
+    if (!granted) {
+      Alert.alert('Permission required', 'Please enable notifications in your device settings.');
+      return;
+    }
+    setTestingSend(true);
+    await sendTestNotification();
+    setTestingSend(false);
+    Alert.alert('On its way', 'A test notification will arrive in about 5 seconds. Background the app to see it.');
   };
 
   const handleLogout = () => {
@@ -289,6 +302,13 @@ export default function ProfileScreen() {
             <PrimaryButton
               label={savingNotif ? 'Saving…' : 'Save reminder'}
               onPress={handleSaveReminder}
+            />
+          </View>
+          <View style={{ marginTop: 8 }}>
+            <PrimaryButton
+              label={testingSend ? 'Sending…' : 'Send test notification'}
+              variant="secondary"
+              onPress={handleTestNotification}
             />
           </View>
         </View>

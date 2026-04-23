@@ -6,7 +6,7 @@ import { useTheme } from '@/contexts/theme';
 import { createCategory } from '@/db/queries';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PRESET_COLORS = PASTEL_BG_LIST;
@@ -19,7 +19,11 @@ export default function AddCategory() {
 
   const save = async () => {
     if (!name.trim()) return;
-    await createCategory(name.trim(), color);
+    const result = await createCategory(name.trim(), color);
+    if (!result.success) {
+      Alert.alert('Cannot save', result.error);
+      return;
+    }
     router.back();
   };
 

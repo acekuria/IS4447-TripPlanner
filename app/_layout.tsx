@@ -30,8 +30,6 @@ function AppNavigator() {
   useEffect(() => {
     if (isLoading) return;
     const inTabsGroup = segments[0] === '(tabs)';
-    // checking for login/register specifically — a broader check accidentally redirected
-    // category edit pages back to tabs, which took a while to debug
     const inAuthScreen = segments[0] === 'login' || segments[0] === 'register';
     if (!user && inTabsGroup) {
       router.replace('/login' as never);
@@ -47,7 +45,6 @@ function AppNavigator() {
       const rows = await getHabits();
       setHabits(rows);
 
-      // Restore scheduled notification from saved settings
       const granted = await requestNotificationPermission();
       if (granted) {
         const settings = await getNotificationSettings();

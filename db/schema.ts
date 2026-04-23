@@ -1,5 +1,3 @@
-// Drizzle schema — these definitions mirror the CREATE TABLE statements in client.ts
-// and are used for type-safe queries throughout the app
 import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const categories = sqliteTable('categories', {

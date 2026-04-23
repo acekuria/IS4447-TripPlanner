@@ -46,6 +46,24 @@ export async function scheduleDailyReminder(hour: number, minute: number): Promi
   }
 }
 
+export async function sendTestNotification(): Promise<void> {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Habit check-in',
+        body: "Don't break your streak — log today's habits now.",
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+      },
+    });
+  } catch {
+    // ignore
+  }
+}
+
 export async function cancelAllReminders(): Promise<void> {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
