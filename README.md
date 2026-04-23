@@ -2,7 +2,7 @@
 
 **GitHub Repository:** https://github.com/acekuria/IS4447-habit-tracker
 
-**Expo Link:** exp://192.168.178.28:8081
+**Expo Link:** https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T16%3A46%3A39.345Z&slug=exp&projectId=bc658a39-1cb1-4871-96b7-34f8db3dbf3d&group=46a3d10f-7f43-46ba-b352-98011bf1e880
 
 > Scan the QR code from `npx expo start` in your terminal to open the app in Expo Go.
 
